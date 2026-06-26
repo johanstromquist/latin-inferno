@@ -282,8 +282,17 @@ function buildAssemble(card,fb,si,c,ci,passed){
     var seen={};
     shuffled.forEach(function(w){ seen[w]=(seen[w]||0)+1; if(seen[w]>(used[w]||0)){ var t=tile(w); t.onclick=function(){ placed.push(w); redraw(); }; bank.appendChild(t); } });
   }
+  function sameMulti(a,b){ if(a.length!==b.length) return false; var x=a.slice().sort(),y=b.slice().sort(); for(var i=0;i<x.length;i++) if(x[i]!==y[i]) return false; return true; }
   check.onclick=function(){
     if(placed.length<sol.length){ reveal(fb,"bad","Det fattas ord — placera alla "+sol.length+" orden först."); return; }
+    if(c.freeOrder){ // valfri ordföljd (ev. med verbet sist) — accepterar alla giltiga latinska ordföljder
+      var multiOk=sameMulti(placed,sol);
+      var lastOk=!c.pinLast || placed[placed.length-1]===sol[sol.length-1];
+      if(multiOk && lastOk){ lock(); pass(si,ci,c,fb,"<b>Rēctē!</b> &ldquo;"+placed.join(" ")+"&rdquo; — "+(c.explain||"")); }
+      else if(!multiOk) reveal(fb,"bad","Använd exakt de givna orden — något är fel eller saknas.");
+      else reveal(fb,"bad",(c.pinHint||"Verbet ska stå sist i latinet.")+" Flytta och försök igen.");
+      return;
+    }
     var right=0; for(var i=0;i<sol.length;i++) if(placed[i]===sol[i]) right++;
     if(right===sol.length){ lock(); pass(si,ci,c,fb,"<b>Rēctē!</b> &ldquo;"+sol.join(" ")+"&rdquo; — "+(c.explain||"")); }
     else reveal(fb,"bad",(c.actMiss?("<i>"+c.actMiss+"</i> "):"")+"<b>"+right+" av "+sol.length+"</b> på rätt plats. Flytta orden och försök igen.");

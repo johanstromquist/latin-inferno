@@ -147,7 +147,7 @@ const INFERNO = {
         hint:"Amor = kärleken (subjekt) · mē = mig (objekt) · vincit = besegrar",
         assemblePrompt:"Bygg satsen i ordföljden subjekt – objekt – verb:",
         solution:["Amor","mē","vincit"],
-        explain:"<b>Amor</b> (nom) subjekt, <b>mē</b> objekt, <b>vincit</b> → eng. <i>invincible</i>. Jfr Vergilius 'omnia vincit Amor'." }
+        explain:"<b>Amor</b> (nom) subjekt, <b>mē</b> objekt, <b>vincit</b> → eng. <i>invincible</i>. (Vi övar den normala ordföljden här; latinet tillåter även andra — det möter du i krets VIII.)" }
     ]
   },
 
@@ -242,9 +242,10 @@ const INFERNO = {
       { type:"translatio", crit:"text", grade:"A", title:"Bygg den latinska meningen (A)",
         q:"Sätt ihop latinet för: <b>Med Vergilius går jag över floden utan rädsla.</b>",
         hint:"cum Vergiliō = med Vergilius · trāns flūmen = över floden · sine timōre = utan rädsla · eō = jag går",
-        assemblePrompt:"Bygg meningen (prepositionsfraserna i ordning, verbet sist):",
+        assemblePrompt:"Bygg meningen — prepositionsfraserna i VALFRI ordning (latinet är fritt), men verbet eō sist:",
+        freeOrder:true, pinLast:true, pinHint:"Verbet eō (jag går) ska stå sist.",
         solution:["cum Vergiliō","trāns flūmen","sine timōre","eō"],
-        explain:"cum + abl., trāns + ack., sine + abl., verbet sist. <i>sine timōre</i> = utan rädsla → eng. <i>timid</i>." }
+        explain:"cum + abl., trāns + ack., sine + abl. De tre fraserna kan stå i vilken ordning som helst — latinet är fritt — men verbet står normalt sist. <i>sine timōre</i> → eng. <i>timid</i>." }
     ]
   },
 
@@ -297,12 +298,11 @@ const INFERNO = {
         q:"Vad uttrycker perfekt i <b>vīcī</b>?",
         options:["en avslutad handling (jag har segrat)","en pågående handling","framtid"], answer:0,
         explain:"Perfekt = avslutad handling: <i>vīcī</i> = jag har segrat. vincō → <i>vīcī</i> (oregelb.)." },
-      { type:"translatio", crit:"text", grade:"A", title:"Bygg den latinska meningen (A)",
-        q:"Sätt ihop latinet för: <b>Skogen ropade, men Vergilius räddade mig.</b>",
-        hint:"silva = skogen · clāmābat = ropade (impf.) · sed = men · Vergilius (subjekt) · mē = mig · servāvit = räddade (perf.)",
-        assemblePrompt:"Bygg meningen i ordning (de två satserna binds av sed):",
-        solution:["silva","clāmābat,","sed","Vergilius","mē","servāvit"],
-        explain:"<b>clāmābat</b> (impf, pågående) mot <b>servāvit</b> (perf, avslutad). servāre → <i>konservera, bevara</i>." }
+      { type:"grammar", crit:"grammar", grade:"A", title:"Tempus i sammanhang (A)",
+        body:"I <b>silva clāmābat, sed Vergilius mē servāvit</b> (skogen ropade, men Vergilius räddade mig) står ett verb i imperfekt (pågående) och ett i perfekt (avslutat).",
+        q:"Skriv <b>perfekt</b> 'han räddade' av <b>servāre</b> (den avslutade handlingen i meningen):",
+        accept:["servavit"], answerLabel:"servāvit",
+        explain:"<b>servāvit</b> (perfekt, -v-) = avslutad handling, mot <b>clāmābat</b> (imperfekt, pågående). servāre → <i>konservera, bevara</i>." }
     ]
   },
 
@@ -329,13 +329,12 @@ const INFERNO = {
         q:"Vad är sensmoralen?",
         options:["misstänk en alltför generös gåva","ge alltid gåvor","lita på grekerna"], answer:0,
         explain:"En 'danaergåva' = en gåva med baktanke. Ulysses, hästens upphovsman, straffas i denna krets." },
-      { type:"translatio", crit:"text", grade:"C", title:"Bygg den latinska meningen",
-        act:"Red ut bedragarnas vrängda ordföljd — bygg satsen rätt på latin.",
-        q:"Sätt ihop latinet för: <b>Vergilius, som besjöng Aeneas, visar vägen.</b>",
-        hint:"Vergilius (subjekt) · quī = som · Aenēam = Aeneas (objekt) · cecinit = besjöng (perf.) · viam = vägen · mōnstrat = visar",
-        assemblePrompt:"Bygg meningen — relativsatsen (quī … cecinit) inuti huvudsatsen:",
-        solution:["Vergilius,","quī","Aenēam","cecinit,","viam","mōnstrat"],
-        explain:"<b>quī … cecinit</b> är en relativsats som beskriver Vergilius: 'han som besjöng Aeneas' — dvs. Aeneiden." }
+      { type:"grammar", crit:"grammar", grade:"C", title:"Relativpronomenet",
+        act:"Red ut bisatsen — vilket ord binder den till Vergilius?",
+        body:"En relativsats inleds av ett relativpronomen ('som'). I <b>Vergilius, ___ Aenēam cecinit, viam mōnstrat</b> (Vergilius, som besjöng Aeneas, visar vägen) saknas det.",
+        q:"Fyll i relativpronomenet ('som', maskulinum singular):",
+        accept:["qui"], answerLabel:"quī",
+        explain:"<b>quī</b> = 'som' (m. sg.). Det inleder relativsatsen <i>quī Aenēam cecinit</i> ('som besjöng Aeneas') som beskriver Vergilius — dvs. Aeneiden." }
     ]
   },
 
