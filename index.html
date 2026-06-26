@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Latin Inferno — en latinresa genom Dantes nio kretsar</title>
+<meta name="description" content="Lär dig latin med Vergilius som guide genom Dantes Inferno. Ett interaktivt äventyr för kursen Latin – språk och kultur 1 (LATLAT01).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- TITELSKÄRM -->
+  <section id="screen-title" class="screen active">
+    <div class="title-hero" id="title-hero">
+      <div class="title-inner">
+        <p class="overline">Latin – språk och kultur 1 · LATLAT01</p>
+        <h1>LATIN<span>INFERNO</span></h1>
+        <p class="tagline">Med Vergilius som vägvisare ned genom Dantes nio kretsar.<br>
+           <em>Per aspera ad astra</em> — genom svårigheter mot stjärnorna.</p>
+        <div class="title-buttons">
+          <button class="btn btn-primary" id="btn-start">Börja nedstigningen</button>
+          <button class="btn" id="btn-continue" hidden>Fortsätt resan</button>
+        </div>
+        <button class="btn-link" id="btn-about">Om äventyret &amp; kursmålen</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- KARTAN / NEDSTIGNINGEN -->
+  <section id="screen-map" class="screen">
+    <header class="bar">
+      <button class="btn-link" id="btn-to-title">&larr; Titel</button>
+      <h2 class="bar-title">Nedstigningen</h2>
+      <button class="btn-link" id="btn-compass">Betygskompass</button>
+    </header>
+    <ol id="map-list" class="map-list"></ol>
+  </section>
+
+  <!-- KRETS / STAGE -->
+  <section id="screen-stage" class="screen">
+    <header class="bar">
+      <button class="btn-link" id="btn-to-map">&larr; Nedstigningen</button>
+      <h2 class="bar-title" id="stage-bar-title"></h2>
+      <span class="bar-spacer"></span>
+    </header>
+    <div id="stage-body"></div>
+  </section>
+
+  <!-- BETYGSKOMPASS (overlay) -->
+  <div id="compass-overlay" class="overlay" hidden>
+    <div class="overlay-card">
+      <button class="overlay-close" id="compass-close">&times;</button>
+      <h3>Betygskompass</h3>
+      <p class="muted">Hur dina svar speglar Skolverkets kunskapskrav för LATLAT01. Stjärnmärkta nivåer (E&rarr;C&rarr;A) bygger på varandra: <em>översiktligt</em> &rarr; <em>utförligt</em> &rarr; <em>nyanserat</em>.</p>
+      <div id="compass-body"></div>
+    </div>
+  </div>
+
+  <!-- OM (overlay) -->
+  <div id="about-overlay" class="overlay" hidden>
+    <div class="overlay-card">
+      <button class="overlay-close" id="about-close">&times;</button>
+      <h3>Om äventyret</h3>
+      <div class="about-text">
+        <p>Du spelar Dante — landsförvisad och vilse i den mörka skogen — när skalden <strong>Vergilius</strong>, han som skrev <em>Aeneiden</em> på latin, stiger fram och leder dig ned genom helvetets nio kretsar och upp igen till stjärnorna. Vergilius lär dig latin medan ni går: latinet är bokstavligen guidens eget språk.</p>
+        <p>Varje krets är en nivå som tränar verkligt kursinnehåll i <strong>Latin – språk och kultur 1</strong>: uttal, formlära (deklinationer, konjugationer, kasus), enkel meningsbyggnad, basordförråd som lever vidare i svenska och engelska, latinets historia, samt romersk historia och kultur. Varje uppgift är märkt <strong>E</strong>, <strong>C</strong> eller <strong>A</strong> efter betygskriterierna.</p>
+        <p class="note-accuracy"><strong>Om äktheten:</strong> Dantes <em>Inferno</em> är skrivet på italienska och används här som berättelsens ram. Allt <strong>latin</strong> är äkta kurslatin, riktiga rader ur Vergilius <em>Aeneiden</em> (med bok- och radhänvisning) och autentiska sentenser. Inget latin är påhittat.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/engine.js"></script>
+</body>
+</html>

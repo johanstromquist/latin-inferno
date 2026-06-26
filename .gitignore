@@ -1,0 +1,5 @@
+# lokala arbetsfiler för illustrationspipelinen (källbilder, ej använda av appen)
+assets/illustrations/
+# scratch
+*.log
+.DS_Store

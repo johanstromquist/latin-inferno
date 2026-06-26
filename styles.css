@@ -1,0 +1,202 @@
+/* ============================================================
+   LATIN INFERNO — stil. Mörk illuminerad handskrift / Doré.
+   ============================================================ */
+:root{
+  --bg:#0c0a08; --bg2:#141009; --panel:#1b1610; --panel2:#241d14;
+  --ink:#e9ddc2; --ink-dim:#b6a988; --muted:#8a7c63;
+  --gold:#c8a24a; --gold-bright:#e7c878; --ember:#c8551f; --blood:#7c1f1f;
+  --line:#3a2f20; --ok:#5e8a4a; --bad:#9d3b2f;
+  --serif:"EB Garamond",Georgia,serif; --display:"Cinzel",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(120% 80% at 50% -10%,#1c160d 0%,var(--bg) 60%) fixed;
+  color:var(--ink); font-family:var(--serif); font-size:18px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+#app{max-width:980px;margin:0 auto;min-height:100vh}
+
+/* skärmar */
+.screen{display:none;animation:fade .4s ease}
+.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* knappar */
+.btn{font-family:var(--display);font-size:.95rem;letter-spacing:.04em;
+  background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+  padding:.7em 1.4em;border-radius:3px;cursor:pointer;transition:.18s}
+.btn:hover{border-color:var(--gold);color:var(--gold-bright)}
+.btn-primary{background:linear-gradient(180deg,var(--blood),#561414);
+  border-color:var(--gold);color:var(--gold-bright)}
+.btn-primary:hover{filter:brightness(1.15)}
+.btn-link{background:none;border:none;color:var(--ink-dim);font-family:var(--display);
+  font-size:.82rem;letter-spacing:.05em;cursor:pointer;padding:.4em}
+.btn-link:hover{color:var(--gold-bright)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+
+/* topp-bar */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:1em;
+  padding:.8em 1.2em;border-bottom:1px solid var(--line);position:sticky;top:0;
+  background:linear-gradient(180deg,var(--bg) 70%,transparent);z-index:5;backdrop-filter:blur(3px)}
+.bar-title{font-family:var(--display);font-size:1rem;letter-spacing:.06em;margin:0;
+  color:var(--gold);text-align:center;flex:1}
+.bar-spacer{width:60px}
+
+/* ---------- titel ---------- */
+.title-hero{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:2rem 1.2rem;position:relative;
+  background-size:cover;background-position:center;}
+.title-hero::before{content:"";position:absolute;inset:0;
+  background:radial-gradient(120% 90% at 50% 40%,transparent 30%,rgba(8,6,4,.86) 78%,#070504 100%)}
+.title-inner{position:relative;max-width:640px}
+.overline{font-family:var(--display);letter-spacing:.22em;font-size:.72rem;
+  color:var(--gold);text-transform:uppercase;margin:0 0 1.2rem}
+h1{font-family:var(--display);font-weight:700;margin:0;line-height:.92;
+  font-size:clamp(3rem,11vw,6.2rem);color:var(--ink);
+  text-shadow:0 2px 30px rgba(200,85,31,.35)}
+h1 span{display:block;color:var(--gold-bright)}
+.tagline{font-size:1.18rem;color:var(--ink-dim);margin:1.6rem auto 2.2rem;max-width:30em}
+.tagline em{color:var(--gold);font-style:italic}
+.title-buttons{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.4rem}
+
+/* ---------- kartan ---------- */
+.map-list{list-style:none;margin:0;padding:1.2rem 1.2rem 4rem;counter-reset:c}
+.map-node{display:flex;gap:1.1rem;align-items:stretch;margin:0 0 .6rem;
+  border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel);
+  cursor:pointer;transition:.18s;position:relative}
+.map-node:hover{border-color:var(--gold);transform:translateX(4px)}
+.map-node.locked{opacity:.5;cursor:not-allowed;filter:grayscale(.5)}
+.map-node.locked:hover{transform:none;border-color:var(--line)}
+.map-node.done{border-color:#4a5e3a}
+.node-art{width:130px;flex:0 0 130px;background-size:cover;background-position:center;
+  position:relative}
+.node-art::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 40%,var(--panel))}
+.node-body{padding:.85rem 1rem;flex:1}
+.node-roman{font-family:var(--display);font-size:.74rem;letter-spacing:.1em;color:var(--gold);text-transform:uppercase}
+.node-title{font-size:1.22rem;margin:.1rem 0 .15rem;color:var(--ink)}
+.node-focus{font-size:.92rem;color:var(--muted);font-style:italic}
+.node-status{position:absolute;top:.7rem;right:.9rem;font-family:var(--display);font-size:.7rem;
+  letter-spacing:.08em;color:var(--ink-dim)}
+.node-status.cleared{color:var(--gold-bright)}
+.node-lock{position:absolute;top:.7rem;right:.9rem;font-size:.9rem;color:var(--muted)}
+
+/* ---------- krets / stage ---------- */
+.stage-hero{height:min(42vh,340px);background-size:cover;background-position:center;
+  position:relative;display:flex;align-items:flex-end}
+.stage-hero::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 30%,rgba(10,8,5,.95))}
+.stage-hero-cap{position:relative;padding:1.4rem;z-index:1}
+.stage-roman{font-family:var(--display);letter-spacing:.12em;color:var(--gold);font-size:.82rem;text-transform:uppercase}
+.stage-h{font-family:var(--display);font-size:clamp(1.6rem,5vw,2.4rem);margin:.15rem 0 .1rem;color:var(--ink)}
+.stage-sub{color:var(--ink-dim);font-style:italic}
+.stage-focus{margin-top:.5rem;display:inline-block;font-size:.82rem;font-family:var(--display);
+  letter-spacing:.04em;color:var(--gold);border:1px solid var(--line);padding:.3em .8em;border-radius:20px}
+.stage-wrap{padding:1.4rem 1.2rem 5rem;max-width:760px;margin:0 auto}
+
+/* dialog (Vergilius/Dante) */
+.dialog{display:flex;gap:1rem;background:var(--panel);border:1px solid var(--line);
+  border-left:3px solid var(--gold);border-radius:6px;padding:1.1rem 1.2rem;margin:0 0 1rem}
+.dialog .avatar{width:60px;height:60px;flex:0 0 60px;border-radius:50%;background-size:cover;
+  background-position:center;border:2px solid var(--gold);background-color:var(--panel2)}
+.dialog .who{font-family:var(--display);font-size:.78rem;letter-spacing:.08em;color:var(--gold);text-transform:uppercase;margin-bottom:.25rem}
+.dialog.dante{border-left-color:var(--blood)}
+.dialog.dante .avatar{border-color:var(--blood)}
+.dialog.dante .who{color:#c98a8a}
+.dialog p{margin:.2rem 0}
+
+/* Aeneid-citat */
+.versus{margin:1rem 0 1.6rem;padding:1rem 1.2rem;background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);border-radius:6px;text-align:center}
+.versus .la{font-size:1.4rem;color:var(--gold-bright);font-style:italic;font-family:var(--serif)}
+.versus .sv{color:var(--ink-dim);margin:.3rem 0 .2rem}
+.versus .ref{font-family:var(--display);font-size:.7rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+
+/* uppgiftskort */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:1.2rem 1.3rem;margin:0 0 1rem}
+.card-head{display:flex;align-items:center;gap:.7rem;margin-bottom:.6rem}
+.tag{font-family:var(--display);font-size:.68rem;font-weight:700;letter-spacing:.06em;
+  padding:.22em .6em;border-radius:3px;border:1px solid}
+.tag-type{color:var(--gold);border-color:var(--line);background:var(--panel2);font-style:normal}
+.tag-E{color:#bcd6a8;border-color:#4a5e3a;background:#1d2616}
+.tag-C{color:#e7c878;border-color:#6a5320;background:#241c0c}
+.tag-A{color:#e3a07a;border-color:#7c3a22;background:#2a160d}
+.card-title{font-family:var(--display);font-size:1.05rem;color:var(--ink);margin:0}
+.card-body{color:var(--ink-dim);margin:.2rem 0 .8rem}
+.card-body b{color:var(--ink)}
+.latin-chip{display:inline-block;font-style:italic;color:var(--gold-bright);
+  background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:.15em .6em;margin:.2em 0}
+.q{font-size:1.12rem;color:var(--ink);margin:.4rem 0 .8rem}
+.q b,.q i{color:var(--gold-bright)}
+.hint{font-size:.9rem;color:var(--muted);font-style:italic;margin:.2rem 0 .8rem}
+
+/* alternativ */
+.opts{display:flex;flex-direction:column;gap:.55rem}
+.opt{text-align:left;font-family:var(--serif);font-size:1rem;color:var(--ink);
+  background:var(--panel2);border:1px solid var(--line);border-radius:5px;
+  padding:.7em 1em;cursor:pointer;transition:.14s}
+.opt:hover{border-color:var(--gold);background:#2c2316}
+.opt b,.opt i{color:var(--gold-bright)}
+.opt.correct{border-color:var(--ok);background:#1e2a16;color:#d6e6c4}
+.opt.wrong{border-color:var(--bad);background:#2a1512;color:#e6c4bd}
+.opt[disabled]{cursor:default}
+
+/* feedback / reveal */
+.feedback{margin-top:.9rem;padding:.8em 1em;border-radius:5px;font-size:.98rem;display:none}
+.feedback.show{display:block}
+.feedback.good{background:#1c2714;border:1px solid #4a5e3a;color:#cfe3bb}
+.feedback.bad{background:#271513;border:1px solid #7c3a22;color:#e6c4bd}
+.feedback b,.feedback i{color:var(--gold-bright)}
+.reveal-box{margin-top:.9rem;padding:.9em 1.1em;background:var(--panel2);border:1px dashed var(--gold);
+  border-radius:6px;color:var(--ink);display:none}
+.reveal-box.show{display:block}
+.selfgrade{display:flex;gap:.5rem;margin-top:.8rem;flex-wrap:wrap}
+.selfgrade .btn{font-size:.8rem;padding:.5em 1em}
+
+/* sententia */
+.sententia{text-align:center;padding:.6rem 0 1rem}
+.sententia .la{font-size:1.5rem;font-style:italic;color:var(--gold-bright)}
+.sententia .sv{color:var(--ink-dim)}
+.sententia .ref{font-family:var(--display);font-size:.68rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-top:.2rem}
+.sententia .note{font-size:.92rem;color:var(--ink-dim);margin-top:.7rem;font-style:italic}
+
+/* stage-fot */
+.stage-foot{margin-top:1.4rem;text-align:center}
+.cleared-banner{font-family:var(--display);color:var(--gold-bright);letter-spacing:.06em;
+  border:1px solid var(--gold);border-radius:6px;padding:1rem;margin-bottom:1rem;
+  background:linear-gradient(180deg,#241c0c,var(--panel))}
+
+/* overlay */
+.overlay{position:fixed;inset:0;background:rgba(6,4,3,.8);display:flex;align-items:center;
+  justify-content:center;padding:1.2rem;z-index:20;backdrop-filter:blur(4px)}
+.overlay[hidden]{display:none}
+.screen{display:none}
+.overlay-card{background:var(--bg2);border:1px solid var(--gold);border-radius:10px;
+  max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:1.6rem;position:relative}
+.overlay-card h3{font-family:var(--display);color:var(--gold);margin:.2rem 0 1rem}
+.overlay-close{position:absolute;top:.6rem;right:.9rem;background:none;border:none;
+  color:var(--ink-dim);font-size:1.6rem;cursor:pointer;line-height:1}
+.about-text p{color:var(--ink-dim)}
+.note-accuracy{border-top:1px solid var(--line);padding-top:.9rem;font-size:.94rem}
+
+/* kompass */
+.cbar{margin:0 0 1.1rem}
+.cbar-head{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--display);
+  font-size:.84rem;letter-spacing:.05em}
+.cbar-head .lv{color:var(--gold)}
+.cbar-track{height:12px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:.3rem}
+.cbar-fill{height:100%;background:linear-gradient(90deg,var(--ember),var(--gold-bright));width:0;transition:width .5s}
+.cbar-desc{font-size:.84rem;color:var(--muted);margin-top:.25rem;font-style:italic}
+.cbadge{color:var(--gold-bright)}
+
+.muted{color:var(--muted)}
+footer.colophon{text-align:center;color:var(--muted);font-size:.8rem;padding:2rem 1rem;border-top:1px solid var(--line)}
+
+@media(max-width:560px){
+  body{font-size:17px}
+  .node-art{width:92px;flex-basis:92px}
+  .dialog{flex-direction:column}
+  .dialog .avatar{width:48px;height:48px;flex-basis:48px}
+}
