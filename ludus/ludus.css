@@ -1,0 +1,45 @@
+:root{ --tint:#241d14; --gold:#c8a24a; --gold-br:#e7c878; --ink:#e9ddc2; --muted:#8a7c63; --line:#3a2f20;
+  --serif:"EB Garamond",Georgia,serif; --display:"Cinzel",Georgia,serif; }
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(120% 80% at 50% -10%,var(--tint),#0a0807 60%) fixed;
+  color:var(--ink);font-family:var(--serif);font-size:17px;-webkit-font-smoothing:antialiased}
+#ludus-wrap{max-width:760px;margin:0 auto;padding:0 1rem 4rem}
+
+#ludus-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:.8rem .2rem;border-bottom:1px solid var(--line);position:sticky;top:0;
+  background:linear-gradient(180deg,#0a0807 70%,transparent);z-index:5}
+.back{color:var(--muted);text-decoration:none;font-family:var(--display);font-size:.8rem;letter-spacing:.05em}
+.back:hover{color:var(--gold-br)}
+.titles{text-align:center;flex:1}
+#ludus-title{font-family:var(--display);font-weight:700;color:var(--gold-br);letter-spacing:.04em}
+#ludus-sub{font-size:.82rem;color:var(--muted);font-style:italic}
+#ludus-meter{font-family:var(--display);font-size:.74rem;letter-spacing:.05em;color:var(--muted)}
+#ludus-meter b{color:var(--gold-br)}
+
+.intro{color:var(--ink);font-style:italic;border-left:3px solid var(--gold);padding:.6em 1em;
+  background:rgba(0,0,0,.25);border-radius:0 6px 6px 0;margin:1rem 0 .6rem}
+.task{font-family:var(--display);font-size:.95rem;color:var(--gold-br);margin:0 0 .8rem;
+  border:1px solid var(--line);border-radius:6px;padding:.6em .9em;background:rgba(0,0,0,.2)}
+.task-ph{color:var(--muted);font-size:.78rem}
+
+#ludus-stage{position:relative;display:flex;justify-content:center;
+  border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#0a0907}
+#ludus-canvas{display:block;max-width:100%;height:auto;image-rendering:auto}
+.flash{position:absolute;left:50%;top:14px;transform:translateX(-50%);
+  background:rgba(20,16,10,.92);border:1px solid var(--gold);color:var(--gold-br);
+  font-family:var(--display);font-size:.82rem;padding:.5em 1em;border-radius:20px;
+  opacity:0;transition:.25s;pointer-events:none;white-space:nowrap}
+.flash.show{opacity:1}
+
+#dpad{display:none;flex-direction:column;align-items:center;gap:.4rem;margin:1rem 0}
+#dpad button{width:60px;height:46px;font-size:1.1rem;background:#1b1610;color:var(--gold);
+  border:1px solid var(--line);border-radius:8px}
+.dpad-mid{display:flex;gap:3.2rem}
+@media(hover:none){ #dpad{display:flex} }
+
+.hint{color:var(--muted);font-size:.82rem;margin:.9rem 0;text-align:center;font-style:italic}
+.sel-h{font-family:var(--display);color:var(--gold);font-size:.9rem;letter-spacing:.06em;border-top:1px solid var(--line);padding-top:1rem}
+#ludus-select{display:flex;flex-wrap:wrap;gap:.5rem}
+.lv-btn{font-family:var(--display);font-size:.78rem;background:#1b1610;color:var(--ink);
+  border:1px solid var(--line);border-radius:5px;padding:.5em .8em;cursor:pointer}
+.lv-btn:hover{border-color:var(--gold);color:var(--gold-br)}

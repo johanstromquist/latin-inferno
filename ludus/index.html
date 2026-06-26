@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saxa Cadentia — Latin Inferno (träningsläge)</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="ludus.css">
+</head>
+<body>
+<div id="ludus-wrap">
+  <header id="ludus-bar">
+    <a class="back" href="../index.html">&larr; Inferno</a>
+    <div class="titles"><div id="ludus-title">Saxa Cadentia</div><div id="ludus-sub"></div></div>
+    <div id="ludus-meter" title="Säkerhetsmätare (platshållare)">säkerhet: <b id="ludus-streak">0</b></div>
+  </header>
+
+  <p id="ludus-intro" class="intro"></p>
+  <div id="ludus-task" class="task"></div>
+
+  <div id="ludus-stage">
+    <canvas id="ludus-canvas"></canvas>
+    <div id="ludus-flash" class="flash"></div>
+  </div>
+
+  <div id="dpad" aria-hidden="true">
+    <button id="dpad-up">▲</button>
+    <div class="dpad-mid"><button id="dpad-left">◀</button><button id="dpad-right">▶</button></div>
+    <button id="dpad-down">▼</button>
+  </div>
+
+  <div class="hint">Piltangenter / WASD — eller svep / d-pad. Steg 2: nivåerna är ritade; gravitation, knuff, leverans och fiender är platshållare.</div>
+
+  <h3 class="sel-h">Nivåer</h3>
+  <div id="ludus-select"></div>
+</div>
+
+<script src="levels.js"></script>
+<script src="engine.js"></script>
+</body>
+</html>
