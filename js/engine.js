@@ -223,11 +223,17 @@ function buildMC(card,fb,st,si,c,ci,passed){
       if(locked) return;
       if(oi===c.answer){ for(var k=0;k<opts.children.length;k++){opts.children[k].disabled=true;} b.classList.add("correct"); locked=true; pass(si,ci,c,fb); }
       else{
-        attempts++; b.classList.add("wrong"); b.disabled=true;
+        attempts++;
         if(attempts>=2){
+          b.classList.add("wrong");
           for(var k=0;k<opts.children.length;k++){ if(k===c.answer) opts.children[k].classList.add("correct"); opts.children[k].disabled=true; }
           locked=true; reveal(fb,"bad","<b>Inte riktigt.</b> "+(c.explain||""));
-        } else reveal(fb,"bad",(c.actMiss?("<i>"+c.actMiss+"</i> "):"")+firstMissHint(c));
+        } else {
+          // första miss: visa regelhint, men avslöja inte rätt — rensa valet och låt alla vara klickbara
+          b.classList.add("wrong");
+          reveal(fb,"bad",(c.actMiss?("<i>"+c.actMiss+"</i> "):"")+firstMissHint(c));
+          (function(btn){ setTimeout(function(){ btn.classList.remove("wrong"); fb.classList.remove("show"); },1400); })(b);
+        }
       }
     };
     opts.appendChild(b);
