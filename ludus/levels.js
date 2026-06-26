@@ -41,18 +41,14 @@ const LUDUS_LEVELS = [
   },
 
   { id:"limbo", name:"Cīrculus I — Limbus", sub:"1:a deklinationen · kasus", tint:"#1c2418",
-    intro:"Vergilius: Altaret kräver en form. Gräv till rätt ÄNDELSE-sten, knuffa den i slotten. Bilda fem ord.",
+    intro:"Vergilius: Altaret kräver en form. Läs ändelserna, knuffa RÄTT sten i slotten bredvid den. Bilda fem ord.",
     drill:{ type:"decline1", pool:["rosa","via","puella","terra","aqua","stella","vīta"], count:5 },
+    // Tre sten+slott-par (*S). Övre korridoren är fri (gå runt). Knuffa rätt sten höger i slotten.
     grid:[
       "################",
-      "#@...*...*...*.#",
-      "#.####.##.####.#",
-      "#....O.....O...#",
-      "#.##.####.##.#.#",
-      "#..*.....*....*#",
-      "#.####.##.####.#",
-      "#......S.......#",
-      "#............#X#",
+      "#@            X#",
+      "#              #",
+      "#  *S   *S   *S#",
       "################"
     ]
   },
