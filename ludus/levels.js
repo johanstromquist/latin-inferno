@@ -9,18 +9,17 @@
 
 const LUDUS_LEVELS = [
 
-  { id:"selva", name:"Silva Obscura", sub:"Tutorial — rörelse, gräv, lykta", tint:"#2a2113",
-    intro:"Vergilius: Lär dig stigen, viātor. Piltangenter (eller svep) rör dig; gräv genom gruset; min lykta lyser vägen. Nå porten.",
+  { id:"selva", name:"Silva Obscura", sub:"Tutorial — gräv, knuffa, nå porten", tint:"#2a2113",
+    intro:"Vergilius: Lär dig stigen. Pilarna (eller svep) gräver genom jorden. Knuffa en sten i sidled. Lyktan lyser vägen. Gräv fram till porten ↑.",
     drill:{ type:"tutorial" },
+    // jordfylld grotta: gräv tunnlar genom jorden, knuffa stenen, nå porten
     grid:[
       "################",
-      "#@.....#.......#",
-      "#..###.#.###...#",
-      "#..#...........#",
-      "#..#.####.###..#",
-      "#.....#.....#..#",
-      "#.###.#.###.#..#",
-      "#...........#.X#",
+      "#@..........X..#",
+      "#..............#",
+      "#......r.......#",
+      "#..............#",
+      "#..............#",
       "################"
     ]
   },
@@ -41,14 +40,17 @@ const LUDUS_LEVELS = [
   },
 
   { id:"limbo", name:"Cīrculus I — Limbus", sub:"1:a deklinationen · kasus", tint:"#1c2418",
-    intro:"Vergilius: Altaret kräver en form. Läs ändelserna, knuffa RÄTT sten i slotten bredvid den. Bilda fem ord.",
-    drill:{ type:"decline1", pool:["rosa","via","puella","terra","aqua","stella","vīta"], count:5 },
-    // Tre sten+slott-par (*S). Övre korridoren är fri (gå runt). Knuffa rätt sten höger i slotten.
+    intro:"Vergilius: Gräv dig fram. Läs runornas ändelser och knuffa RÄTT runa in i altaret (◊) bredvid den. Bilda tre former.",
+    drill:{ type:"decline1", pool:["rosa","via","puella","terra","aqua","stella","vīta"], count:3 },
+    // jordfylld grotta; tre runa+altare-par (*◊). Gräv till rätt runa, knuffa den ett steg in i altaret.
     grid:[
       "################",
-      "#@            X#",
-      "#              #",
-      "#  *S   *S   *S#",
+      "#@...........X.#",
+      "#..............#",
+      "#..*A....*A....#",
+      "#..............#",
+      "#......*A......#",
+      "#..............#",
       "################"
     ]
   },
@@ -99,17 +101,21 @@ const LUDUS_LEVELS = [
   },
 
   { id:"wrath", name:"Cīrculus V — Īra", sub:"Prepositioner + ablativ · STIGANDE STYX", tint:"#10171a",
-    intro:"Vergilius: Styx stiger. Knuffa rätt ablativ-sten i slotten — tre gånger — innan det svarta vattnet når dig. Fel kostar liv.",
-    drill:{ type:"ablative", count:3, lives:3, rising:true, riseEvery:9 },
-    // stenarna vilar på pelare (raden under dem); vattnet stiger i luftspalterna mellan
+    intro:"Vergilius: Styx stiger! Gräv fram och knuffa rätt ABLATIV-runa in i ett altare (◊) tre gånger — innan det svarta vattnet sväljer dig. Fel kostar liv.",
+    drill:{ type:"ablative", count:3, lives:3, rising:true, riseEvery:12 },
+    // jordfylld grotta; tre runa+altare-par; stenar i mellanrummen; vattnet stiger och äter jorden
     grid:[
-      "############",
-      "#@        X#",
-      "# *S *S *S #",
-      "# #  #  #  #",
-      "#          #",
-      "#~~~~~~~~~~#",
-      "############"
+      "################",
+      "#@.....X.......#",
+      "#..............#",
+      "#.....r....r...#",
+      "#..............#",
+      "#..*A...*A...*A#",
+      "#..............#",
+      "#..............#",
+      "#..............#",
+      "#~~~~~~~~~~~~~~#",
+      "################"
     ]
   },
 

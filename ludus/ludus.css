@@ -1,4 +1,4 @@
-:root{ --tint:#241d14; --gold:#c8a24a; --gold-br:#e7c878; --ink:#e9ddc2; --muted:#8a7c63; --line:#3a2f20;
+:root{ --tint:#241d14; --gold:#c8a24a; --gold-br:#e7c878; --ink:#e9ddc2; --ink-dim:#b6a988; --muted:#8a7c63; --line:#3a2f20;
   --serif:"EB Garamond",Georgia,serif; --display:"Cinzel",Georgia,serif; }
 *{box-sizing:border-box}
 body{margin:0;background:radial-gradient(120% 80% at 50% -10%,var(--tint),#0a0807 60%) fixed;
@@ -18,10 +18,19 @@ body{margin:0;background:radial-gradient(120% 80% at 50% -10%,var(--tint),#0a080
 
 .intro{color:var(--ink);font-style:italic;border-left:3px solid var(--gold);padding:.6em 1em;
   background:rgba(0,0,0,.25);border-radius:0 6px 6px 0;margin:1rem 0 .6rem}
-.task{font-family:var(--display);font-size:.95rem;color:var(--gold-br);margin:0 0 .8rem;
-  border:1px solid var(--line);border-radius:6px;padding:.6em .9em;background:rgba(0,0,0,.2)}
-.task-ph{color:var(--muted);font-size:.78rem}
+.task{font-family:var(--display);font-size:.95rem;color:var(--gold-br);margin:0 0 .5rem;
+  border:1px solid var(--gold);border-radius:6px;padding:.7em 1em;
+  background:linear-gradient(180deg,#241c0c,rgba(0,0,0,.25));display:flex;flex-wrap:wrap;align-items:center;gap:.5em}
+.task-ph,.obj-ph{color:var(--muted);font-size:.82rem;font-style:italic}
+.obj-lead{color:var(--ink-dim);font-size:.82rem;letter-spacing:.02em}
+.obj-end{font-family:var(--serif);font-style:italic;font-weight:700;font-size:1.5rem;color:var(--gold-br);
+  background:#0a0907;border:1px solid var(--gold);border-radius:5px;padding:.02em .4em}
+.obj-word{color:var(--ink);font-style:italic}
+.obj-prog{margin-left:auto;color:var(--gold-br)}
 .syncr{color:var(--muted);font-size:.72rem;font-style:italic}
+.legend{display:flex;flex-wrap:wrap;gap:.5rem 1.1rem;margin:0 0 .8rem;font-size:.76rem;color:var(--muted)}
+.legend b{font-style:normal;margin-right:.25em}
+.lg-dirt{color:#7a5a32}.lg-stone{color:#8a8078}.lg-rune{color:var(--gold-br)}.lg-altar{color:var(--gold)}.lg-water{color:#5b8aa2}
 
 #ludus-stage{position:relative;display:flex;justify-content:center;
   border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#0a0907}
