@@ -11,6 +11,7 @@
 var TS=36;
 var canvas, ctx, level, grid, W, H, px, py, levelIdx=0;
 var labels={}, task=null, progress=0, needed=5, streak=0, cleared=false, settling=false, origFrag=[];
+var vitae=3, wmoves=0;
 
 var COLORS={ wall:"#2b2622", wallTop:"#3a332b", dirt:"#3a2c1c", air:"#0a0907",
   stone:"#6b6258", fragFill:"#2e2716", fragInk:"#e7c878", shrine:"#b9892f",
@@ -28,6 +29,7 @@ function loadLevel(i){
   H=grid.length; W=Math.max.apply(null, grid.map(function(r){return r.length;}));
   grid.forEach(function(r){ while(r.length<W) r.push(r[r.length-1]); });  // normalisera bredd
   labels={}; progress=0; streak=0; cleared=false; task=null; origFrag=[];
+  vitae=(level.drill&&level.drill.lives)||3; wmoves=0;
   needed=(level.drill&&level.drill.count)||5;
   for(var y=0;y<H;y++) for(var x=0;x<W;x++){
     if(grid[y][x]==="@"){ px=x; py=y; grid[y][x]=" "; }
@@ -38,22 +40,35 @@ function loadLevel(i){
   el("ludus-title").textContent=level.name;
   el("ludus-sub").textContent=level.sub;
   el("ludus-intro").textContent=level.intro;
-  el("ludus-streak").textContent=streak;
+  el("ludus-streak").textContent=streak; updateHearts();
   settling=true; applyGravity(); settling=false;   // sätt världen i vila
   nextTask();
   render();
 }
 
 /* ---------- latin: paradigm-generator ---------- */
+function twin(end){ return end==="ā"?"a":end==="a"?"ā":end==="ō"?"o":end==="o"?"ō":null; }
+function withNearMiss(answer, pool){            // tvinga fram makron-tvillingen som distraktor
+  pool=shuffle(pool.filter(function(e){return e!==answer;}));
+  var t=twin(answer); if(t){ pool=[t].concat(pool.filter(function(e){return e!==t;})); }
+  return pool;
+}
 function genTask(drill){
   if(drill && drill.type==="decline1"){
-    var noun=pick(drill.pool);
-    var stem=noun.replace(/[aā]$/,"");
+    var noun=pick(drill.pool), stem=noun.replace(/[aā]$/,"");
     var cases=[["nominativ","a"],["ackusativ","am"],["genitiv","ae"],["dativ","ae"],["ablativ","ā"]];
     var c=pick(cases);
-    var pool=["a","am","ae","ā","ās","īs","ārum","um","us","ō"].filter(function(e){return e!==c[1];});
-    return { prompt:"<b>"+noun+"‑</b> &rarr; <b>"+c[0]+"</b>", answer:c[1],
-             full:stem+c[1], distractors:shuffle(pool) };
+    return { prompt:"<b>"+noun+"‑</b> &rarr; <b>"+c[0]+"</b>"+(c[1]==="ae"?" <span class='syncr'>(gen=dat)</span>":""),
+             answer:c[1], full:stem+c[1],
+             distractors:withNearMiss(c[1],["a","am","ae","ā","ās","īs","ārum","um","us","ō"]) };
+  }
+  if(drill && drill.type==="ablative"){
+    var nouns=[{w:"aqua",e:"ā",d:1},{w:"silva",e:"ā",d:1},{w:"via",e:"ā",d:1},{w:"umbra",e:"ā",d:1},
+               {w:"servus",e:"ō",d:2},{w:"dominus",e:"ō",d:2},{w:"templum",e:"ō",d:2}];
+    var preps=["in","cum","sine","ē"];
+    var n=pick(nouns), p=pick(preps), st=n.w.replace(/(us|um|a)$/,"");
+    return { prompt:"<b>"+p+" "+n.w+"</b> &rarr; <b>ablativ</b>", answer:n.e, full:p+" "+st+n.e,
+             distractors:withNearMiss(n.e,["ā","ō","am","um","ae","īs","ārum"]) };
   }
   return null; // övriga drilltyper: platshållare denna skiva
 }
@@ -119,10 +134,14 @@ function deliver(end){
     if(progress>=needed){ levelClear(); } else nextTask();
   } else {
     streak=0; el("ludus-streak").textContent=streak;
-    HUD.flash("Fel ändelse (-"+end+"). "+stripTags(task.prompt)+". Försök igen.");
+    vitae--; updateHearts();                                  // FEL KOSTAR — ingen gratis gissning
+    if(vitae<=0){ HUD.flash("Fel ändelse (-"+end+"). Lyktan slocknar — kammaren börjar om.");
+      setTimeout(function(){ loadLevel(levelIdx); },900); return; }
+    HUD.flash("Fel ändelse (-"+end+"). "+stripTags(task.prompt)+". ("+vitae+" liv kvar)");
     nextTask();
   }
 }
+function updateHearts(){ var h=el("ludus-hearts"); if(h) h.textContent="✦".repeat(Math.max(0,vitae)); }
 function stripTags(s){ return s.replace(/<[^>]+>/g,"").replace(/‑/g,""); }
 
 function levelClear(){
@@ -131,8 +150,8 @@ function levelClear(){
   el("ludus-task").innerHTML="<b style='color:#e7c878'>Klarad!</b> Gå till porten ↑.";
 }
 function death(){
-  HUD.flash("Krossad! Kammaren börjar om.");
-  setTimeout(function(){ loadLevel(levelIdx); },700);
+  HUD.flash("Du gick under — kammaren börjar om.");
+  setTimeout(function(){ loadLevel(levelIdx); },800);
 }
 
 /* ---------- rendering ---------- */
@@ -160,8 +179,15 @@ function drawTile(x,y,t){
 }
 function boulder(X,Y,fill,label){
   ctx.beginPath(); ctx.arc(X+TS/2,Y+TS/2,TS/2-3,0,7); ctx.fillStyle=fill; ctx.fill();
-  ctx.strokeStyle=label?"rgba(200,162,74,.7)":"rgba(0,0,0,.5)"; ctx.lineWidth=2; ctx.stroke();
-  if(label){ ctx.fillStyle=COLORS.fragInk; ctx.font="bold 13px Georgia"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(label,X+TS/2,Y+TS/2); }
+  ctx.strokeStyle=label?"rgba(200,162,74,.75)":"rgba(0,0,0,.5)"; ctx.lineWidth=2; ctx.stroke();
+  if(label){
+    var txt=(""+label).replace(/^-/,""); var hasMac=/[āēīōū]/.test(txt);
+    var base=txt.replace(/ā/g,"a").replace(/ē/g,"e").replace(/ī/g,"i").replace(/ō/g,"o").replace(/ū/g,"u");
+    ctx.fillStyle=COLORS.fragInk; ctx.font="bold 17px Georgia"; ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText(base,X+TS/2,Y+TS/2+1);
+    if(hasMac){ var w=ctx.measureText(base).width; ctx.strokeStyle=COLORS.fragInk; ctx.lineWidth=2.5;
+      ctx.beginPath(); ctx.moveTo(X+TS/2-w/2,Y+9); ctx.lineTo(X+TS/2+w/2,Y+9); ctx.stroke(); }  // tydlig makron-stapel
+  }
 }
 function drawDante(x,y){
   var X=x*TS, Y=y*TS;
@@ -189,9 +215,21 @@ function move(dx,dy){
   else if(t==="~"){ death(); return; }
   else if(t==="E"){ death(); return; }
   applyGravity();
+  if(level.drill && level.drill.rising) waterTick();
   render();
 }
+function waterTick(){
+  wmoves++;
+  if(wmoves % (level.drill.riseEvery||5) !== 0) return;
+  var top=-1;
+  for(var y=0;y<H && top<0;y++) for(var x=0;x<W;x++){ if(grid[y][x]==="~"){ top=y; break; } }
+  if(top<=1) return;
+  var r=top-1, rose=false;
+  for(var x2=0;x2<W;x2++){ if(grid[r][x2]===" "){ grid[r][x2]="~"; rose=true; } }
+  if(rose && grid[py][px]==="~"){ death(); }
+}
 function onExit(){
+  if(task!==null && !cleared){ HUD.flash("Porten är låst — forma klart kammaren först."); return; }
   if(levelIdx<LUDUS_LEVELS.length-1){ loadLevel(levelIdx+1); }
   else { HUD.flash("Ad astra — du har nått stjärnorna."); }
 }

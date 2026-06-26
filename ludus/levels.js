@@ -99,17 +99,17 @@ const LUDUS_LEVELS = [
   },
 
   { id:"wrath", name:"Cīrculus V — Īra", sub:"Prepositioner + ablativ · STIGANDE STYX", tint:"#10171a",
-    intro:"Vergilius: Styx stiger. Arbeta uppåt och leverera ablativen innan vattnet når dig.",
-    drill:{ type:"ablative", pool:["aqua","silva","via","umbra"], count:5 },
+    intro:"Vergilius: Styx stiger. Knuffa rätt ablativ-sten i slotten — fyra gånger — innan det svarta vattnet når dig. Fel kostar liv.",
+    drill:{ type:"ablative", count:3, lives:3, rising:true, riseEvery:9 },
+    // stenarna vilar på pelare (raden under dem); vattnet stiger i luftspalterna mellan
     grid:[
-      "################",
-      "#@...*....*...X#",
-      "#.####..####..#",
-      "#....*...S....#",
-      "#.##..####..##.#",
-      "#..*.....*....#",
-      "#~~~~~~~~~~~~~~#",
-      "################"
+      "############",
+      "#@        X#",
+      "# *S *S *S #",
+      "# #  #  #  #",
+      "#          #",
+      "#~~~~~~~~~~#",
+      "############"
     ]
   },
 

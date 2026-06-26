@@ -21,6 +21,7 @@ body{margin:0;background:radial-gradient(120% 80% at 50% -10%,var(--tint),#0a080
 .task{font-family:var(--display);font-size:.95rem;color:var(--gold-br);margin:0 0 .8rem;
   border:1px solid var(--line);border-radius:6px;padding:.6em .9em;background:rgba(0,0,0,.2)}
 .task-ph{color:var(--muted);font-size:.78rem}
+.syncr{color:var(--muted);font-size:.72rem;font-style:italic}
 
 #ludus-stage{position:relative;display:flex;justify-content:center;
   border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#0a0907}
