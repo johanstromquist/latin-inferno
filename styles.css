@@ -194,9 +194,52 @@ h1 span{display:block;color:var(--gold-bright)}
 .muted{color:var(--muted)}
 footer.colophon{text-align:center;color:var(--muted);font-size:.8rem;padding:2rem 1rem;border-top:1px solid var(--line)}
 
+/* ---------- v2: drop-cap, uttal, act, cloze, assemble, kartdjup ---------- */
+.dropcap::first-letter{font-family:var(--display);font-weight:700;color:var(--gold-bright);
+  font-size:3.1em;line-height:.8;float:left;margin:.04em .12em -.06em 0}
+
+.pron{display:flex;align-items:center;gap:.7rem;justify-content:center;flex-wrap:wrap;margin-top:.55rem}
+.pron-key{font-family:var(--display);font-size:.72rem;letter-spacing:.06em;color:var(--muted)}
+.pron-btn{background:var(--panel2);border:1px solid var(--line);color:var(--gold);
+  font-family:var(--display);font-size:.7rem;letter-spacing:.05em;padding:.3em .8em;border-radius:20px;cursor:pointer}
+.pron-btn:hover{border-color:var(--gold);color:var(--gold-bright)}
+
+.act{font-family:var(--display);font-size:.82rem;letter-spacing:.02em;color:var(--ember);
+  background:linear-gradient(90deg,rgba(200,85,31,.12),transparent);
+  border-left:2px solid var(--ember);padding:.5em .8em;margin:0 0 .8rem;border-radius:0 4px 4px 0}
+
+.cloze{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.cloze-input{font-family:var(--serif);font-size:1.15rem;font-style:italic;color:var(--gold-bright);
+  background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:.55em .9em;min-width:200px;flex:1}
+.cloze-input:focus{outline:none;border-color:var(--gold)}
+.cloze-input.ok{border-color:var(--ok);color:#d6e6c4}
+.cloze-input.bad{border-color:var(--bad)}
+.feedback .ans{font-style:italic;color:var(--gold-bright);font-weight:600}
+
+.assemble-prompt{color:var(--ink-dim);margin:.2rem 0 .6rem}
+.assemble-answer{min-height:2.6em;display:flex;flex-wrap:wrap;gap:.45rem;padding:.6em;
+  background:rgba(10,8,5,.5);border:1px dashed var(--line);border-radius:6px;margin-bottom:.7rem}
+.assemble-bank{display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:.8rem}
+.tile{font-family:var(--serif);font-size:1.02rem;color:var(--ink);background:var(--panel2);
+  border:1px solid var(--line);border-radius:5px;padding:.45em .9em;cursor:pointer;transition:.12s}
+.tile:hover{border-color:var(--gold);color:var(--gold-bright)}
+.tile.placed{background:#2c2316;border-color:var(--gold)}
+.tile[disabled]{cursor:default;opacity:.85}
+.assemble-ctl{display:flex;gap:1rem;align-items:center}
+
+.small{font-size:.86rem}
+.perfect{color:var(--gold-bright);font-size:.8em}
+
+/* kartan som nedstigning: djupare kretsar kallnar/mörknar */
+.map-node{transition:.18s, margin .3s}
+.map-node::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:6px;
+  background:linear-gradient(180deg,rgba(14,18,30,0),rgba(10,14,26,calc(var(--d,0)*.5)))}
+.map-node .node-art::after{z-index:1}
+
 @media(max-width:560px){
   body{font-size:17px}
   .node-art{width:92px;flex-basis:92px}
   .dialog{flex-direction:column}
   .dialog .avatar{width:48px;height:48px;flex-basis:48px}
+  .map-node{margin-left:0 !important;margin-right:0 !important}
 }

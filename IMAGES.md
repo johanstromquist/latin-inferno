@@ -4,13 +4,16 @@ Anchor APPROVED: `assets/illustrations/review/latin-inferno-anchor-v1.png`.
 That image defines the style + the two recurring characters. Reference it into EVERY
 later generation so style and characters stay locked.
 
-## Locked style bible (from the anchor)
-- Technique: dark illuminated-manuscript meets early-Renaissance / Doré-engraving painterliness; chiaroscuro.
-- Palette: deep shadow + ember/gold highlights. EXCEPTION: `stars` uses cool blue/silver starlight (the one hopeful image).
-- Recurring frame motif: the gold illuminated-vine border (as on the anchor) on ALL landscape hero images.
+## Locked style bible (ELEVATED — "restored Sistine Chapel" bar, johan)
+- Quality bar: RESTORED-FRESCO. Vivid, saturated, LUMINOUS color (the cleaned/restored Sistine look — never faded, grimy or muted), Renaissance grandeur, fine detail. Doré-meets-Michelangelo: muscular monumental figures, luminous flesh and jewel-toned drapery even within shadow.
+- Reconcile dark subject + luminous bar: it's Hell, so the setting is dark — but render it with CLEAN saturated color and luminous light: glowing embers, gold leaf catching light, rich crimson/lapis/emerald robes, radiant fire. Darkness as deep velvety shadow, not mud. `limbo`, `stars`, `wood` may open brighter; `stars` stays the cool blue/silver luminous exception.
+- Technique: illuminated-manuscript meets High-Renaissance fresco + Doré engraving drama; chiaroscuro with luminous highlights.
+- Recurring frame motif: the gold illuminated-vine border on ALL landscape heroes — push the DECORATIVE DEPTH: richer ornamental borders, flourishes, marginalia where they elevate the page.
+- Characters locked to anchor (same Virgil: grey beard, blue mantle, lantern, scroll; same Dante: crimson hood, book). Anchor-reference EVERY image so the lavish set stays one coherent world.
 - Virgil prop: the raised lantern + scroll (recurring).
-- Tone: atmospheric dread, intellectually serious, age-appropriate for a bright 17-year-old. NOT gory, NOT cartoonish, NOT childish.
+- Tone: atmospheric grandeur, intellectually serious, age-appropriate for a bright 17-year-old. NOT gory, NOT cartoonish, NOT childish.
 - NO embedded text or fake Latin anywhere. Any inscription must be illegible/implied only.
+- "Is this beautiful?" is now a first-class acceptance gate alongside consistency.
 
 ## Locked characters (must match anchor in every scene they appear)
 - DANTE: young man, crimson hooded robe, dark cloak, holding a book. Clean-shaven, aquiline.
