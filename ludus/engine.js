@@ -22,11 +22,11 @@ var LUDUS_PROGRESS_KEY="latininferno_ludus";   // delad med huvudspelet (samma o
 function ludusProgress(){ try{ return JSON.parse(localStorage.getItem(LUDUS_PROGRESS_KEY))||{}; }catch(e){ return {}; } }
 function fmtTime(ms){ return ms?(ms/1000).toFixed(1)+"s":"–"; }
 function saveScore(id,ms,moves){
-  var p=ludusProgress(), e=p[id]||{}, rec=false; e.cleared=true;
-  if(ms>0 && (!e.bestTime || ms<e.bestTime)){ e.bestTime=ms; rec=true; }
-  if(!e.bestMoves || moves<e.bestMoves){ e.bestMoves=moves; rec=true; }
-  p[id]=e; try{ localStorage.setItem(LUDUS_PROGRESS_KEY,JSON.stringify(p)); }catch(e2){}
-  return { rec:rec, best:e };
+  var p=ludusProgress(), e=p[id]||{}, first=!e.cleared, betterT=false, betterM=false;
+  if(ms>0 && (!e.bestTime || ms<e.bestTime)){ e.bestTime=ms; betterT=true; }
+  if(moves>0 && (!e.bestMoves || moves<e.bestMoves)){ e.bestMoves=moves; betterM=true; }
+  e.cleared=true; p[id]=e; try{ localStorage.setItem(LUDUS_PROGRESS_KEY,JSON.stringify(p)); }catch(e2){}
+  return { first:first, betterT:betterT, betterM:betterM, best:e };
 }
 
 /* ---------- sprites ---------- */
@@ -251,9 +251,9 @@ function tryPush(x,y,dx){
   if(dx===0) return false;
   var bx=x+dx; if(!inB(bx,y)) return false;
   var b=grid[y][bx];
-  if(b===" "){ grid[y][bx]=grid[y][x]; grid[y][x]=" "; moveLabel(x,y,bx,y); px=x; py=y; return true; }
-  if(b==="A"){ px=x; py=y; consumeIntoAltar(x,y); return true; }
-  if(b==="B"){ buildPush(x,y,bx,y); return true; }
+  if(b===" "){ grid[y][bx]=grid[y][x]; grid[y][x]=" "; moveLabel(x,y,bx,y); px=x; py=y; countMove(); return true; }
+  if(b==="A"){ px=x; py=y; countMove(); consumeIntoAltar(x,y); return true; }   // räkna FÖRE leverans/levelClear
+  if(b==="B"){ px=x; py=y; countMove(); buildPush(x,y,bx,y); return true; }
   return false;
 }
 function buildPush(rx,ry,bx,by){   // bär ord till verstavlan (◳) i rätt ordning
@@ -302,7 +302,11 @@ function levelClear(){ cleared=true;
   var head = level.boss ? (level.bossDefeat==="tame" ? "✦ "+level.boss.toUpperCase()+" MÄTTAD!"
                                                      : "✦ "+level.boss.toUpperCase()+" STÖRTAR!")
                         : "✦ Kammaren klarad!";
-  HUD.flash(head+"  "+fmtTime(elapsed)+" · "+moveCount+" drag"+(sc.rec?"  ✦ REKORD!":"")+"  — gå till porten ↑");
+  var badge = sc.first ? "  ✦ FÖRSTA KLAR!"
+            : (sc.betterT&&sc.betterM) ? "  ✦ REKORD! (snabbare & färre drag)"
+            : sc.betterT ? "  ✦ REKORD! (snabbare)"
+            : sc.betterM ? "  ✦ REKORD! (färre drag)" : "";
+  HUD.flash(head+"  "+fmtTime(elapsed)+" · "+moveCount+" drag"+badge+"  — gå till porten ↑");
   var tEl=el("ludus-time"); if(tEl) tEl.textContent=(elapsed/1000).toFixed(1);
   buildSelect();   // uppdatera bästa tid/drag i nivåväljaren
 }
@@ -432,14 +436,13 @@ function move(dx,dy){
   if(dead) return;
   if(dx) facing=dx>0?1:-1;
   var nx=px+dx, ny=py+dy; if(!inB(nx,ny)) return;
-  var t=grid[ny][nx]; var ox=px, oy=py;
+  var t=grid[ny][nx];
   if(t==="#"){ return; }
-  if(t==="."){ grid[ny][nx]=" "; px=nx; py=ny; }       // gräv
-  else if(t===" "||t==="A"||t==="B"||t==="b"){ px=nx; py=ny; }
-  else if(t==="r"||t==="*"){ if(dy===0) tryPush(nx,ny,dx); }   // knuffa (bara sidled)
+  if(t==="."){ grid[ny][nx]=" "; px=nx; py=ny; countMove(); }       // gräv
+  else if(t===" "||t==="A"||t==="B"||t==="b"){ px=nx; py=ny; countMove(); }
+  else if(t==="r"||t==="*"){ if(dy===0) tryPush(nx,ny,dx); }   // knuffa (tryPush räknar lyckat drag före leverans)
   else if(t==="X"){ onExit(); return; }
   else if(t==="~"||t==="E"||t==="i"){ death(); return; }
-  if(px!==ox||py!==oy){ if(!levelStart) levelStart=Date.now(); moveCount++; updateScoreHUD(); }   // räkna drag, starta klockan
   if(task&&task.build){ updateObjective(); checkBuild(); }
   render();                                           // gravitation/vatten sköts av tick-loopen
 }
@@ -454,6 +457,7 @@ var HUD={ _t:null, flash:function(m){ var f=el("ludus-flash"); f.textContent=m; 
   clearTimeout(HUD._t); HUD._t=setTimeout(function(){ f.classList.remove("show"); },2500); } };
 function updateScoreHUD(){ var m=el("ludus-moves"); if(m) m.textContent=moveCount;
   var tEl=el("ludus-time"); if(tEl && !cleared) tEl.textContent=((levelStart?Date.now()-levelStart:0)/1000).toFixed(1); }
+function countMove(){ if(!levelStart) levelStart=Date.now(); moveCount++; updateScoreHUD(); }   // räkna draget FÖRE ev. levelClear
 function buildLegend(){
   var L=el("ludus-legend"); if(!L) return;
   var r=level.drill&&level.drill.rising;
@@ -488,7 +492,7 @@ function init(){
   var sx,sy; canvas.addEventListener("touchstart",function(e){ var t=e.touches[0]; sx=t.clientX; sy=t.clientY; },{passive:true});
   canvas.addEventListener("touchend",function(e){ var t=e.changedTouches[0]; var dx=t.clientX-sx, dy=t.clientY-sy;
     if(Math.abs(dx)<20&&Math.abs(dy)<20) return; if(Math.abs(dx)>Math.abs(dy)) move(dx>0?1:-1,0); else move(0,dy>0?1:-1); },{passive:true});
-  var start=2;
+  var start=0;   // förstagångsbesök → börja på tutorial (Silva)
   var lp=null; try{ lp=new URLSearchParams(location.search).get("level"); }catch(e){}
   if(lp!=null){   // djuplänk från huvudspelet: ?level=<id> eller index
     var byId=-1; for(var k=0;k<LUDUS_LEVELS.length;k++) if(LUDUS_LEVELS[k].id===lp) byId=k;
