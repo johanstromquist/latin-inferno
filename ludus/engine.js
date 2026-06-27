@@ -19,7 +19,7 @@ var hover=null, hintOn=true;
 var enemies=[], enemyCounter=0, icicleCounter=0;
 
 /* ---------- sprites ---------- */
-var SPRITE_FILES=["dirt","wall","boulder","rune","altar","water","gate-closed","gate-open","dante","shade","lucifer","icicle","minotaur"];
+var SPRITE_FILES=["dirt","wall","boulder","rune","altar","water","gate-closed","gate-open","dante","shade","lucifer","icicle","minotaur","ice-dirt","ice-wall"];
 var IMG={};
 SPRITE_FILES.forEach(function(n){ var im=new Image();
   im.onload=function(){ IMG[n]=im; if(grid) render(); }; im.src="sprites/"+n+".png"; });
@@ -61,7 +61,7 @@ function loadLevel(i){
   el("ludus-sub").textContent=level.sub;
   el("ludus-intro").textContent=level.intro;
   el("ludus-streak").textContent=streak; updateHearts();
-  buildLegend();
+  buildLegend(); setupBoss();
   assignGemEndings();                 // fasta ändelser, sätts en gång
   dead=false; settle();
   nextTask(); render(); startTick();
@@ -293,13 +293,15 @@ function render(){
   drawBoss();
   drawHint();
 }
-function drawBoss(){
+function setupBoss(){
+  var stage=el("ludus-stage"), img=el("boss-img");
+  if(level.boss){ stage.classList.add("boss-stage"); if(img.getAttribute("src")!=="sprites/lucifer.png") img.src="sprites/lucifer.png"; img.hidden=false; }
+  else { stage.classList.remove("boss-stage"); img.hidden=true; }
+}
+function drawBoss(){   // Lucifer ritas som HTML-bild ovanför fältet (setupBoss); här bara skuggat tak
   if(!level.boss) return;
-  var w=TS*5, h=TS*2.4, bx=canvas.width/2-w/2;
-  if(IMG["lucifer"]){ ctx.drawImage(IMG["lucifer"],bx,-TS*0.3,w,h); }
-  else { ctx.fillStyle="rgba(18,8,26,.55)"; ctx.fillRect(0,0,canvas.width,TS*1.3);
-    ctx.fillStyle="#9a2b3a"; ctx.font="bold 22px Cinzel,Georgia"; ctx.textAlign="center"; ctx.textBaseline="middle";
-    ctx.fillText("▲ "+level.boss+" ▲",canvas.width/2,TS*0.65); }
+  var g=ctx.createLinearGradient(0,0,0,TS*1.4); g.addColorStop(0,"rgba(10,6,16,.7)"); g.addColorStop(1,"rgba(10,6,16,0)");
+  ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,TS*1.4);
 }
 function correctHover(){   // är runan man hovrar över den rätta?
   if(!hover||!task||!inB(hover[0],hover[1])) return false;
@@ -318,9 +320,9 @@ function drawHint(){
 function spr(name,X,Y){ if(IMG[name]){ ctx.drawImage(IMG[name],X,Y,TS,TS); return true; } return false; }
 function drawTile(x,y,t){
   var X=x*TS, Y=y*TS;
-  if(t==="#"){ if(!spr("wall",X,Y)){ ctx.fillStyle=C.wall; ctx.fillRect(X,Y,TS,TS);
+  if(t==="#"){ if(!spr(level.wallSprite||"wall",X,Y)){ ctx.fillStyle=C.wall; ctx.fillRect(X,Y,TS,TS);
       ctx.fillStyle=C.wallEdge; ctx.fillRect(X,Y,TS,3); ctx.fillRect(X,Y,3,TS); } return; }
-  if(t==="."){ if(!spr("dirt",X,Y)){ ctx.fillStyle=C.dirt; ctx.fillRect(X,Y,TS,TS);
+  if(t==="."){ if(!spr(level.dirtSprite||"dirt",X,Y)){ ctx.fillStyle=C.dirt; ctx.fillRect(X,Y,TS,TS);
       ctx.fillStyle=C.dirtDot; for(var i=0;i<5;i++) ctx.fillRect(X+6+((i*13)%(TS-10)),Y+7+((i*17)%(TS-12)),3,3); } return; }
   // tom bakgrund för övriga
   ctx.fillStyle=C.air; ctx.fillRect(X,Y,TS,TS);
@@ -331,7 +333,11 @@ function drawTile(x,y,t){
   else if(t==="A"){ glow(X,Y); if(!spr("altar",X,Y)) shapeAltar(X,Y); }
   else if(t==="B"){ drawBuildSlot(X,Y,false,null); }
   else if(t==="b"){ drawBuildSlot(X,Y,true,builtWord[k(x,y)]); }
-  else if(t==="E"){ if(!spr(level.enemySprite||"shade",X,Y)) shapeShade(X,Y); }
+  else if(t==="E"){ var gt=(Date.now()%900)/900, ga=0.3+0.28*(0.5+0.5*Math.sin(gt*Math.PI*2));
+    var gc=(level.enemySprite==="minotaur")?"255,150,70":"150,185,255";   // elektrisk gloria så skuggan syns
+    ctx.save(); ctx.shadowColor="rgba("+gc+","+ga.toFixed(2)+")"; ctx.shadowBlur=16;
+    if(!spr(level.enemySprite||"shade",X,Y)) shapeShade(X,Y);
+    ctx.shadowBlur=0; ctx.restore(); }
   else if(t==="i"){ if(!spr("icicle",X,Y)) shapeIcicle(X,Y); }
   else if(t==="X"){ if(!spr(cleared?"gate-open":"gate-closed",X,Y)) shapeGate(X,Y,cleared); }
 }
