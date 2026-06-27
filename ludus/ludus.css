@@ -44,6 +44,15 @@ body{margin:0;background:radial-gradient(120% 80% at 50% -10%,var(--tint),#0a080
 #ludus-stage.boss-stage{overflow:visible;margin-top:46px}   /* plats för Lucifers huvud/vingar ovanför fältet */
 #boss-img{position:absolute;left:50%;transform:translateX(-50%);top:-42px;width:32%;max-width:220px;
   height:auto;pointer-events:none;z-index:4;filter:drop-shadow(0 6px 16px rgba(0,0,0,.7))}
+/* bossens fall: Lucifer snurrar nedåt och störtar när versen är klar */
+@keyframes lucifer-crash{
+  0%{ transform:translateX(-50%) translateY(0) rotate(0deg) scale(1); opacity:1; }
+  12%{ transform:translateX(-50%) translateY(-26px) rotate(-16deg) scale(1.06); opacity:1; }
+  100%{ transform:translateX(-50%) translateY(560px) rotate(936deg) scale(.18); opacity:0; }
+}
+#boss-img.crash{ animation:lucifer-crash 1.7s cubic-bezier(.45,.05,.9,.95) forwards; z-index:6; }
+@keyframes stage-shake{ 0%,100%{transform:translate(0,0)} 20%{transform:translate(-5px,3px)} 40%{transform:translate(5px,-2px)} 60%{transform:translate(-4px,2px)} 80%{transform:translate(3px,-3px)} }
+#ludus-stage.shake{ animation:stage-shake .5s ease-in-out 2; }
 #ludus-canvas{display:block;max-width:100%;height:auto;image-rendering:auto}
 .flash{position:absolute;left:50%;top:14px;transform:translateX(-50%);
   background:rgba(20,16,10,.92);border:1px solid var(--gold);color:var(--gold-br);

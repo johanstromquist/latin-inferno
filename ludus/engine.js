@@ -278,6 +278,11 @@ function deliver(end){
 function updateHearts(){ var h=el("ludus-hearts"); if(h) h.textContent="✦".repeat(Math.max(0,vitae)); }
 
 function levelClear(){ cleared=true;
+  if(level.boss){ var bimg=el("boss-img"), bstage=el("ludus-stage");
+    icicleCounter=-99999;                                   // sluta slunga istappar
+    bimg.classList.add("crash"); bstage.classList.add("shake");
+    setTimeout(function(){ bstage.classList.remove("shake"); },1100);
+  }
   HUD.flash(level.boss ? ("✦ "+level.boss.toUpperCase()+" STÖRTAR! Du klättrar mot ljuset — gå till porten ↑.")
                        : "✦ Kammaren klarad! Porten är öppen — gå till ↑."); }
 function death(){ if(dead) return; dead=true; if(tickTimer){ clearInterval(tickTimer); tickTimer=null; }
@@ -293,6 +298,7 @@ function render(){
 }
 function setupBoss(){
   var stage=el("ludus-stage"), img=el("boss-img");
+  img.classList.remove("crash"); stage.classList.remove("shake");   // nollställ bossens fall
   if(level.boss){ stage.classList.add("boss-stage"); if(img.getAttribute("src")!=="sprites/lucifer.png") img.src="sprites/lucifer.png"; img.hidden=false; }
   else { stage.classList.remove("boss-stage"); img.hidden=true; }
 }
