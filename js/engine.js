@@ -72,6 +72,9 @@ function load(){ try{var s=JSON.parse(localStorage.getItem(SAVE_KEY)); if(s&&s.v
 function save(){ try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){} }
 function cid(si,ci){ return si+"."+ci; }
 function isPassed(si,ci){ return !!S.passed[cid(si,ci)]; }
+// delad framgång från arkaden (Saxa Cadentia), samma origin
+function ludusProgress(){ try{ return JSON.parse(localStorage.getItem("latininferno_ludus"))||{}; }catch(e){ return {}; } }
+function ludusFmt(ms){ return ms?(ms/1000).toFixed(1)+"s":"–"; }
 
 var TOTAL={E:0,C:0,A:0};
 INFERNO.stages.forEach(function(st){ st.challenges.forEach(function(c){ TOTAL[c.grade]++; }); });
@@ -122,10 +125,12 @@ function renderMap(){
     node.style.marginLeft=(depth*7).toFixed(1)+"%";
     node.style.marginRight=(depth*7).toFixed(1)+"%";
     var art=mk("div","node-art"); art.style.backgroundImage=artBg(st.art,st.art+".jpg");
+    var lp=ludusProgress()[st.id], trained=lp&&lp.cleared;
     var body=mk("div","node-body",
       '<div class="node-roman">'+st.roman+'</div>'+
       '<div class="node-title">'+st.sv+'</div>'+
-      '<div class="node-focus">'+st.focus+'</div>');
+      '<div class="node-focus">'+st.focus+'</div>'+
+      (trained?'<div class="node-train ludus-trained">&#9876; tränad · '+ludusFmt(lp.bestTime)+' · '+(lp.bestMoves||'–')+' drag</div>':''));
     node.appendChild(art); node.appendChild(body);
     node.appendChild(mk("div", locked?"node-lock":("node-status"+(done?" cleared":"")),
       locked?"&#128274;":(perfect?"&#10039; 100%":(done?"&#10003; klar":"&rarr;"))));
@@ -159,6 +164,14 @@ function openStage(si){
     '<div class="ref">— '+v.ref+'</div>');
   versus.appendChild(pronEl(v.la));
   body.appendChild(versus);
+
+  var lp=ludusProgress()[st.id];
+  var train=mk("a","ludus-banner"); train.href="ludus/index.html?level="+st.id;
+  train.innerHTML='<span class="lb-icon">&#9876;</span>'+
+    '<span class="lb-text"><b>Träna denna paradigm</b> i Saxa Cadentia'+
+    '<small>'+st.focus+(lp&&lp.cleared?' · <span class="ludus-trained">&#10003; tränad ('+ludusFmt(lp.bestTime)+' · '+(lp.bestMoves||'–')+' drag)</span>':'')+'</small></span>'+
+    '<span class="lb-go">&rarr;</span>';
+  body.appendChild(train);
 
   st.challenges.forEach(function(c,ci){ body.appendChild(renderChallenge(st,si,c,ci)); });
 

@@ -17,6 +17,17 @@ var falling={}, tickTimer=null, wtick=0, dead=false;
 var buildSlots=[], built=[], builtWord={};
 var hover=null, hintOn=true;
 var enemies=[], enemyCounter=0, icicleCounter=0;
+var moveCount=0, levelStart=0;   // poäng: tid (start vid första draget) + antal drag
+var LUDUS_PROGRESS_KEY="latininferno_ludus";   // delad med huvudspelet (samma origin)
+function ludusProgress(){ try{ return JSON.parse(localStorage.getItem(LUDUS_PROGRESS_KEY))||{}; }catch(e){ return {}; } }
+function fmtTime(ms){ return ms?(ms/1000).toFixed(1)+"s":"–"; }
+function saveScore(id,ms,moves){
+  var p=ludusProgress(), e=p[id]||{}, rec=false; e.cleared=true;
+  if(ms>0 && (!e.bestTime || ms<e.bestTime)){ e.bestTime=ms; rec=true; }
+  if(!e.bestMoves || moves<e.bestMoves){ e.bestMoves=moves; rec=true; }
+  p[id]=e; try{ localStorage.setItem(LUDUS_PROGRESS_KEY,JSON.stringify(p)); }catch(e2){}
+  return { rec:rec, best:e };
+}
 
 /* ---------- sprites ---------- */
 var SPRITE_FILES=["dirt","wall","boulder","rune","altar","water","gate-closed","gate-open","dante","shade","lucifer","icicle","minotaur","ice-dirt","ice-wall"];
@@ -44,6 +55,7 @@ function loadLevel(i){
   grid.forEach(function(r){ while(r.length<W) r.push(r[r.length-1]); });
   labels={}; progress=0; streak=0; cleared=false; task=null; origGem=[];
   vitae=(level.drill&&level.drill.lives)||3; wmoves=0; facing=1;
+  moveCount=0; levelStart=0;   // nollställ poängmätare; tiden startar vid första draget
   needed=(level.drill&&level.drill.count)||3;
   buildSlots=[]; built=[]; builtWord={}; enemies=[]; enemyCounter=0; icicleCounter=0;
   for(var y=0;y<H;y++) for(var x=0;x<W;x++){
@@ -64,7 +76,7 @@ function loadLevel(i){
   buildLegend(); setupBoss();
   assignGemEndings();                 // fasta ändelser, sätts en gång
   dead=false; settle();
-  nextTask(); render(); startTick();
+  nextTask(); updateScoreHUD(); render(); startTick();
 }
 
 /* ---------- latin-drillregister ----------
@@ -231,6 +243,7 @@ function tick(){
   if(enemies.length){ enemyCounter++; if(enemyCounter%3===0) enemyTick(); }
   if(level.boss && !cleared){ icicleCounter++; if(icicleCounter%(level.hazardEvery||level.icicleEvery||20)===0) dropIcicle(); }
   if(task&&task.build){ updateObjective(); checkBuild(); }
+  if(levelStart && !cleared) updateScoreHUD();   // levande klocka
   render();
 }
 function startTick(){ if(tickTimer) clearInterval(tickTimer); wtick=0; tickTimer=setInterval(tick,110); }
@@ -280,15 +293,19 @@ function deliver(end){
 function updateHearts(){ var h=el("ludus-hearts"); if(h) h.textContent="✦".repeat(Math.max(0,vitae)); }
 
 function levelClear(){ cleared=true;
+  var elapsed=levelStart?(Date.now()-levelStart):0, sc=saveScore(level.id,elapsed,moveCount);
   if(level.boss){ var bimg=el("boss-img"), bstage=el("ludus-stage");
     icicleCounter=-99999;                                   // stoppa hotet
     if(level.bossDefeat==="tame"){ bimg.classList.add("tamed"); }   // Cerberus mättad → lägger sig
     else { bimg.classList.add("crash"); bstage.classList.add("shake"); setTimeout(function(){ bstage.classList.remove("shake"); },1100); }
   }
-  HUD.flash(level.boss ? (level.bossDefeat==="tame"
-        ? "✦ "+level.boss.toUpperCase()+" MÄTTAD! De tre struparna tystnar — gå till porten ↑."
-        : "✦ "+level.boss.toUpperCase()+" STÖRTAR! Du klättrar mot ljuset — gå till porten ↑.")
-      : "✦ Kammaren klarad! Porten är öppen — gå till ↑."); }
+  var head = level.boss ? (level.bossDefeat==="tame" ? "✦ "+level.boss.toUpperCase()+" MÄTTAD!"
+                                                     : "✦ "+level.boss.toUpperCase()+" STÖRTAR!")
+                        : "✦ Kammaren klarad!";
+  HUD.flash(head+"  "+fmtTime(elapsed)+" · "+moveCount+" drag"+(sc.rec?"  ✦ REKORD!":"")+"  — gå till porten ↑");
+  var tEl=el("ludus-time"); if(tEl) tEl.textContent=(elapsed/1000).toFixed(1);
+  buildSelect();   // uppdatera bästa tid/drag i nivåväljaren
+}
 function death(){ if(dead) return; dead=true; if(tickTimer){ clearInterval(tickTimer); tickTimer=null; }
   HUD.flash("Du gick under — kammaren börjar om."); setTimeout(function(){ loadLevel(levelIdx); },900); }
 
@@ -415,13 +432,14 @@ function move(dx,dy){
   if(dead) return;
   if(dx) facing=dx>0?1:-1;
   var nx=px+dx, ny=py+dy; if(!inB(nx,ny)) return;
-  var t=grid[ny][nx];
+  var t=grid[ny][nx]; var ox=px, oy=py;
   if(t==="#"){ return; }
   if(t==="."){ grid[ny][nx]=" "; px=nx; py=ny; }       // gräv
   else if(t===" "||t==="A"||t==="B"||t==="b"){ px=nx; py=ny; }
   else if(t==="r"||t==="*"){ if(dy===0) tryPush(nx,ny,dx); }   // knuffa (bara sidled)
   else if(t==="X"){ onExit(); return; }
   else if(t==="~"||t==="E"||t==="i"){ death(); return; }
+  if(px!==ox||py!==oy){ if(!levelStart) levelStart=Date.now(); moveCount++; updateScoreHUD(); }   // räkna drag, starta klockan
   if(task&&task.build){ updateObjective(); checkBuild(); }
   render();                                           // gravitation/vatten sköts av tick-loopen
 }
@@ -434,6 +452,8 @@ function onExit(){
 /* ---------- HUD ---------- */
 var HUD={ _t:null, flash:function(m){ var f=el("ludus-flash"); f.textContent=m; f.classList.add("show");
   clearTimeout(HUD._t); HUD._t=setTimeout(function(){ f.classList.remove("show"); },2500); } };
+function updateScoreHUD(){ var m=el("ludus-moves"); if(m) m.textContent=moveCount;
+  var tEl=el("ludus-time"); if(tEl && !cleared) tEl.textContent=((levelStart?Date.now()-levelStart:0)/1000).toFixed(1); }
 function buildLegend(){
   var L=el("ludus-legend"); if(!L) return;
   var r=level.drill&&level.drill.rising;
@@ -443,9 +463,11 @@ function buildLegend(){
 }
 
 /* ---------- level-väljare ---------- */
-function buildSelect(){ var s=el("ludus-select"); s.innerHTML="";
-  LUDUS_LEVELS.forEach(function(l,i){ var b=document.createElement("button"); b.className="lv-btn";
-    b.textContent=i+". "+l.name.replace(/^Cīrculus\s+[IVX]+\s+—\s+/,""); b.onclick=function(){ loadLevel(i); }; s.appendChild(b); }); }
+function buildSelect(){ var s=el("ludus-select"); if(!s) return; s.innerHTML=""; var prog=ludusProgress();
+  LUDUS_LEVELS.forEach(function(l,i){ var b=document.createElement("button"); b.className="lv-btn"; var p=prog[l.id];
+    var name=i+". "+l.name.replace(/^Cīrculus\s+[IVX]+\s+—\s+/,"")+(p&&p.cleared?" ✦":"");
+    b.innerHTML="<span class='lv-name'>"+name+"</span>"+(p&&p.cleared?"<small class='lv-best'>bäst "+fmtTime(p.bestTime)+" · "+(p.bestMoves||"–")+" drag</small>":"");
+    if(p&&p.cleared) b.classList.add("done"); b.onclick=function(){ loadLevel(i); }; s.appendChild(b); }); }
 
 /* ---------- init ---------- */
 function init(){
@@ -466,8 +488,13 @@ function init(){
   var sx,sy; canvas.addEventListener("touchstart",function(e){ var t=e.touches[0]; sx=t.clientX; sy=t.clientY; },{passive:true});
   canvas.addEventListener("touchend",function(e){ var t=e.changedTouches[0]; var dx=t.clientX-sx, dy=t.clientY-sy;
     if(Math.abs(dx)<20&&Math.abs(dy)<20) return; if(Math.abs(dx)>Math.abs(dy)) move(dx>0?1:-1,0); else move(0,dy>0?1:-1); },{passive:true});
-  var start=2; try{ var s=parseInt(localStorage.getItem("ludus_level"),10); if(s>=0&&s<LUDUS_LEVELS.length) start=s; }catch(e){}
-  loadLevel(start);   // återuppta senaste nivå vid refresh
+  var start=2;
+  var lp=null; try{ lp=new URLSearchParams(location.search).get("level"); }catch(e){}
+  if(lp!=null){   // djuplänk från huvudspelet: ?level=<id> eller index
+    var byId=-1; for(var k=0;k<LUDUS_LEVELS.length;k++) if(LUDUS_LEVELS[k].id===lp) byId=k;
+    if(byId>=0) start=byId; else { var n=parseInt(lp,10); if(n>=0&&n<LUDUS_LEVELS.length) start=n; }
+  } else { try{ var s=parseInt(localStorage.getItem("ludus_level"),10); if(s>=0&&s<LUDUS_LEVELS.length) start=s; }catch(e2){} }
+  loadLevel(start);   // djuplänk, annars senaste nivå vid refresh
 }
 window.addEventListener("DOMContentLoaded",init);
 window.LUDUS={ state:function(){ return {task:task,labels:labels,px:px,py:py,progress:progress,needed:needed,streak:streak,vitae:vitae,cleared:cleared,buildBest:(task&&task.build?bestBuildRun():null),grid:grid.map(function(r){return r.join("");})}; },

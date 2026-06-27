@@ -43,6 +43,19 @@ body{
   color:var(--gold);text-align:center;flex:1}
 .bar-spacer{width:60px}
 
+/* ---------- arkad-banner (entré till Saxa Cadentia) ---------- */
+.ludus-banner{display:flex;align-items:center;gap:.9em;margin:1rem 1.2rem 0;padding:.8em 1em;
+  text-decoration:none;color:var(--ink);border:1px solid var(--gold);border-radius:10px;
+  background:linear-gradient(180deg,rgba(120,30,20,.22),rgba(10,8,7,.4))}
+.ludus-banner:hover{filter:brightness(1.15);border-color:var(--gold-bright)}
+.ludus-banner .lb-icon{font-size:1.5rem;color:var(--gold-bright);flex:none}
+.ludus-banner .lb-text{display:flex;flex-direction:column;line-height:1.25;flex:1}
+.ludus-banner .lb-text b{font-family:var(--display);color:var(--gold-bright);letter-spacing:.03em}
+.ludus-banner .lb-text small{color:var(--ink-dim,#b6a988);font-size:.78rem}
+.ludus-banner .lb-go{font-size:1.3rem;color:var(--gold);flex:none}
+.node-train{display:inline-block;margin:.2em .25em 0 0;font-size:.7rem;color:var(--gold)}
+.ludus-trained{color:#7bbf6a !important}
+
 /* ---------- titel ---------- */
 .title-hero{min-height:100vh;display:flex;align-items:center;justify-content:center;
   text-align:center;padding:2rem 1.2rem;position:relative;

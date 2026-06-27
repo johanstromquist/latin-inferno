@@ -61,7 +61,7 @@ body{margin:0;background:radial-gradient(120% 80% at 50% -10%,var(--tint),#0a080
 .flash{position:absolute;left:50%;top:14px;transform:translateX(-50%);
   background:rgba(20,16,10,.92);border:1px solid var(--gold);color:var(--gold-br);
   font-family:var(--display);font-size:.82rem;padding:.5em 1em;border-radius:20px;
-  opacity:0;transition:.25s;pointer-events:none;white-space:nowrap}
+  opacity:0;transition:.25s;pointer-events:none;max-width:92%;text-align:center;line-height:1.35}
 .flash.show{opacity:1}
 
 #dpad{display:none;flex-direction:column;align-items:center;gap:.4rem;margin:1rem 0}
@@ -74,5 +74,9 @@ body{margin:0;background:radial-gradient(120% 80% at 50% -10%,var(--tint),#0a080
 .sel-h{font-family:var(--display);color:var(--gold);font-size:.9rem;letter-spacing:.06em;border-top:1px solid var(--line);padding-top:1rem}
 #ludus-select{display:flex;flex-wrap:wrap;gap:.5rem}
 .lv-btn{font-family:var(--display);font-size:.78rem;background:#1b1610;color:var(--ink);
-  border:1px solid var(--line);border-radius:5px;padding:.5em .8em;cursor:pointer}
+  border:1px solid var(--line);border-radius:5px;padding:.5em .8em;cursor:pointer;
+  display:flex;flex-direction:column;gap:.15em;text-align:left;line-height:1.2}
 .lv-btn:hover{border-color:var(--gold);color:var(--gold-br)}
+.lv-btn.done{border-color:#5a4a2a}
+.lv-best{font-size:.66rem;color:var(--muted);letter-spacing:.02em}
+.lv-btn.done .lv-name{color:var(--gold-br)}
