@@ -3,3 +3,4 @@ assets/illustrations/
 # scratch
 *.log
 .DS_Store
+ludus/sprites/review/
