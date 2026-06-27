@@ -80,12 +80,14 @@ const LUDUS_LEVELS = [
   { id:"violence", name:"Cīrculus VII — Violentia", sub:"Tempus · imperfekt & perfekt", tint:"#1a140f",
     intro:"Vergilius: Pågående eller avslutat? Transportera rätt tempusruna — men stenarna faller om du gräver under dem.",
     drill:{ type:"tense", count:3, lives:3 }, enemySprite:"minotaur",
-    // Minotauros patrullerar en öppen kammare (kol 7-9, rad 4-5); stenen ovanför (8,2)
-    // kan fällas ner på den. Gräv förbi utan att bli fångad.
+    // En vägg (kol 8) delar kammaren; ENDA passagen till porten går genom Minotaurens
+    // kammare (rad 4-5) — du MÅSTE släppa loss den. KILL: stenen sitter LÅNGT bort på
+    // höger sida (12,2). Gräv dit, lura den jagande Minotauren in under stenen och fäll den.
     grid:buildCave(16,9,{ start:[1,1], exit:[14,1],
-      clear:[[7,4],[8,4],[9,4],[7,5],[8,5],[9,5]], enemies:[[8,5]],
-      rocks:[[4,2],[8,2],[11,2]],
-      pairs:[[2,3,2],[12,3,1],[2,5,2],[5,7,2],[10,7,2],[2,7,1]] }) },
+      walls:[[8,1],[8,2],[8,3],[8,6],[8,7]],
+      clear:[[7,4],[8,4],[9,4],[7,5],[8,5],[9,5]], enemies:[[9,5]],
+      rocks:[[12,2],[3,2],[5,2]],
+      pairs:[[2,3,1],[4,3,1],[2,5,2],[2,6,1],[4,6,1],[2,7,2]] }) },
 
   { id:"fraud", name:"Cīrculus VIII — Fraus", sub:"Syntax · BYGG satsen", tint:"#231a12",
     intro:"Vergilius: Bygg satsen 'poēta puellam amat' — knuffa ord-runorna så de står i RAD i rätt ordning.",
