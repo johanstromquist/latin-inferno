@@ -443,6 +443,6 @@ function init(){
   loadLevel(start);   // återuppta senaste nivå vid refresh
 }
 window.addEventListener("DOMContentLoaded",init);
-window.LUDUS={ state:function(){ return {task:task,labels:labels,px:px,py:py,progress:progress,needed:needed,streak:streak,vitae:vitae,cleared:cleared,grid:grid.map(function(r){return r.join("");})}; },
+window.LUDUS={ state:function(){ return {task:task,labels:labels,px:px,py:py,progress:progress,needed:needed,streak:streak,vitae:vitae,cleared:cleared,buildBest:(task&&task.build?bestBuildRun():null),grid:grid.map(function(r){return r.join("");})}; },
   move:function(dx,dy){ move(dx,dy); }, load:function(i){ loadLevel(i); } };
 })();

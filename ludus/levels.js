@@ -97,7 +97,7 @@ const LUDUS_LEVELS = [
     boss:"Lucifer", icicleEvery:16, shafts:[4,8,11], dirtSprite:"ice-dirt", wallSprite:"ice-wall",
     // regelrätt jordkarta: gräv & bygg satsen; skuggan patrullerar tunneln (rad 5),
     // Lucifer slungar istappar ner i schakten (kol 4, 8, 11).
-    grid:buildCave(16,10,{ start:[1,1], exit:[14,1],
+    grid:buildCave(16,11,{ start:[1,1], exit:[14,1],
       tunnel:5, shafts:[4,8,11], enemies:[[7,5]],
       runes:[[2,2],[3,2],[5,2],[6,2],[9,2],[10,2],[12,2],[13,2]] }) },
 
