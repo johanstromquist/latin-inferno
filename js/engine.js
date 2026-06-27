@@ -40,7 +40,7 @@ function playScene(i){
   var stage=el("cutscene-stage"), cap=el("cutscene-cap"), img=el("cutscene-frame");
   if(i>=CUTSCENE.length){ endCutscene(); return; }
   var sc=CUTSCENE[i], f=0;
-  function setFrame(){ stage.style.background=sc.bg; img.src="assets/cutscene/s"+sc.id+"f"+(f+1)+".png"; }
+  function setFrame(){ stage.style.background=sc.bg; img.src="assets/cutscene/s"+sc.id+"f"+(f+1)+".jpg"; }
   img.onerror=function(){ img.style.visibility="hidden"; };
   img.onload=function(){ img.style.visibility="visible"; };
   stage.classList.remove("fading"); cap.classList.remove("cap-hidden");
