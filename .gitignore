@@ -4,3 +4,4 @@ assets/illustrations/
 *.log
 .DS_Store
 ludus/sprites/review/
+assets/cutscene/review/
