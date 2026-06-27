@@ -13,6 +13,8 @@ function buildCave(W,H,o){
   function set(p,c){ g[p[1]][p[0]]=c; }
   (o.walls||[]).forEach(function(p){ set(p,"#"); });
   if(o.water!=null) for(var x=1;x<W-1;x++) g[o.water][x]="~";
+  if(o.tunnel!=null) for(var tx=1;tx<W-1;tx++) g[o.tunnel][tx]=" ";       // skuggans tunnel (öppen rad)
+  (o.shafts||[]).forEach(function(c){ for(var sy=1;sy<=(o.tunnel||1);sy++) g[sy][c]=" "; }); // istapps-schakt
   (o.pairs||[]).forEach(function(p){ var gx=p[0],gy=p[1],gap=p[2]||0; g[gy][gx]="*"; g[gy][gx+gap+1]="A"; });
   (o.builds||[]).forEach(function(p){ g[p[1]][p[0]]="B"; });   // byggrutor
   (o.runes||[]).forEach(function(p){ g[p[1]][p[0]]="*"; });    // lösa runor (bygge)
@@ -91,9 +93,12 @@ const LUDUS_LEVELS = [
   { id:"treachery", name:"Cīrculus IX — Prōditiō", sub:"BOSS · Lucifer · bygg Vergilius rad", tint:"#16202a",
     intro:"Vergilius: Lucifer reser sig ur isen. Bygg min rad på golvet — tū nē cēde malīs — i RAD, medan han slungar istappar och en skugga jagar. Vik inte för olyckorna!",
     drill:{ type:"boss", count:4, lives:4, build:true },
-    boss:"Lucifer", icicleEvery:18,
-    grid:buildCave(16,10,{ open:true, start:[1,1], exit:[14,1], enemies:[[8,4]],
-      runes:[[2,8],[4,8],[6,8],[9,8],[11,8],[13,8],[3,6],[12,6]] }) },
+    boss:"Lucifer", icicleEvery:16,
+    // regelrätt jordkarta: gräv & bygg satsen; skuggan patrullerar tunneln (rad 5),
+    // Lucifer slungar istappar ner i schakten (kol 4, 8, 11).
+    grid:buildCave(16,10,{ start:[1,1], exit:[14,1],
+      tunnel:5, shafts:[4,8,11], enemies:[[7,5]],
+      runes:[[2,2],[6,2],[10,2],[13,2],[2,7],[6,7],[10,7],[13,7]] }) },
 
   { id:"stelle", name:"Ad Astra", sub:"Fri träning · 1:a deklinationen", tint:"#0e1530",
     intro:"Vergilius: Du ser stjärnorna. Träna fritt — transportera rätt kasusruna till altaret.",

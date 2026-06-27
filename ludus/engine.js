@@ -276,7 +276,7 @@ function death(){ if(dead) return; dead=true; if(tickTimer){ clearInterval(tickT
 function render(){
   for(var y=0;y<H;y++) for(var x=0;x<W;x++) drawTile(x,y,grid[y][x]);
   drawPlayer(px,py);
-  if(!level.boss) drawLantern();    // bossarena = fullt upplyst
+  drawLantern();
   drawBoss();
   drawHint();
 }
