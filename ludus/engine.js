@@ -16,6 +16,7 @@ var vitae=3, wmoves=0, facing=1;
 var falling={}, tickTimer=null, wtick=0, dead=false;
 var buildSlots=[], built=[], builtWord={};
 var hover=null, hintOn=true;
+var enemies=[], enemyCounter=0, icicleCounter=0;
 
 /* ---------- sprites ---------- */
 var SPRITE_FILES=["dirt","wall","boulder","rune","altar","water","gate-closed","gate-open","dante"];
@@ -44,13 +45,14 @@ function loadLevel(i){
   labels={}; progress=0; streak=0; cleared=false; task=null; origGem=[];
   vitae=(level.drill&&level.drill.lives)||3; wmoves=0; facing=1;
   needed=(level.drill&&level.drill.count)||3;
-  buildSlots=[]; built=[]; builtWord={};
+  buildSlots=[]; built=[]; builtWord={}; enemies=[]; enemyCounter=0; icicleCounter=0;
   for(var y=0;y<H;y++) for(var x=0;x<W;x++){
     var ch=grid[y][x];
     if(ch==="O") grid[y][x]="r"; else if(ch==="S") grid[y][x]="A";   // alias gamla platshållarnivåer
     if(grid[y][x]==="@"){ px=x; py=y; grid[y][x]=" "; }
     if(grid[y][x]==="*") origGem.push([x,y]);
     if(grid[y][x]==="B") buildSlots.push([x,y]);
+    if(grid[y][x]==="E") enemies.push({x:x,y:y,dir:1});
   }
   buildSlots.sort(function(a,b){ return (a[1]-b[1])||(a[0]-b[0]); });   // ordning: rad, sedan kolumn
   canvas.width=W*TS; canvas.height=H*TS;
@@ -171,12 +173,14 @@ function fall(x,y,nx,ny){ grid[ny][nx]=grid[y][x]; grid[y][x]=" "; moveLabel(x,y
 function gravityStep(){
   var nf={}, moved=false;
   for(var y=H-2;y>=0;y--) for(var x=0;x<W;x++){
-    var t=grid[y][x]; if(t!=="r"&&t!=="*") continue;
+    var t=grid[y][x]; if(t!=="r"&&t!=="*"&&t!=="i") continue;
     var below=grid[y+1][x], pBelow=(px===x&&py===y+1);
-    if(pBelow){ if(falling[k(x,y)]&&!settling){ death(); return false; } continue; } // hålls / krossar
+    if(pBelow){ if(falling[k(x,y)]&&!settling){ death(); return false; } if(t==="i"){ grid[y][x]=" "; moved=true; } continue; }
     if(below===" "){ fall(x,y,x,y+1); nf[k(x,y+1)]=1; moved=true; }
+    else if(below==="E"&&!settling){ squashEnemy(x,y+1); fall(x,y,x,y+1); nf[k(x,y+1)]=1; moved=true; }   // krossa skugga
     else if(below==="A"&&t==="*"&&!settling){ consumeIntoAltar(x,y); moved=true; }
     else if(below==="B"&&t==="*"&&!settling&&falling[k(x,y)]){ buildPush(x,y,x,y+1); moved=true; }
+    else if(t==="i"){ grid[y][x]=" "; moved=true; }                                                       // istapp landar → smälter
     else if(below==="r"||below==="*"){ // rulla av rundad yta
       if(inB(x-1,y)&&grid[y][x-1]===" "&&grid[y+1][x-1]===" "&&!(px===x-1&&py===y)){ fall(x,y,x-1,y); nf[k(x-1,y)]=1; moved=true; }
       else if(inB(x+1,y)&&grid[y][x+1]===" "&&grid[y+1][x+1]===" "&&!(px===x+1&&py===y)){ fall(x,y,x+1,y); nf[k(x+1,y)]=1; moved=true; }
@@ -184,6 +188,17 @@ function gravityStep(){
   }
   falling=nf; return moved;
 }
+function squashEnemy(x,y){ for(var i=0;i<enemies.length;i++) if(enemies[i].x===x&&enemies[i].y===y){ enemies.splice(i,1); HUD.flash("Skuggan krossas!"); return; } }
+function enemyTick(){
+  for(var i=0;i<enemies.length;i++){ var e=enemies[i]; if(grid[e.y][e.x]!=="E"){ enemies.splice(i,1); i--; continue; }
+    var nx=e.x+e.dir;
+    if(inB(nx,e.y) && grid[e.y][nx]===" "){ grid[e.y][e.x]=" "; e.x=nx; grid[e.y][e.x]="E"; }
+    else e.dir=-e.dir;
+    if(e.x===px && e.y===py){ death(); return; }
+  }
+}
+function dropIcicle(){ var tries=0; while(tries++<10){ var x=1+Math.floor(Math.random()*(W-2));
+  if(grid[1][x]===" "){ grid[1][x]="i"; return; } } }
 function settle(){ settling=true; var g=0; while(gravityStep()&&g++<500){} settling=false; falling={}; }
 function raiseWater(){
   var top=-1; for(var y=0;y<H&&top<0;y++) for(var x=0;x<W;x++){ if(grid[y][x]==="~"){ top=y; break; } }
@@ -198,6 +213,8 @@ function tick(){
   if(dead) return;
   gravityStep();
   if(level.drill&&level.drill.rising){ wtick++; if(wtick%(level.drill.riseEvery||22)===0) raiseWater(); }
+  if(enemies.length){ enemyCounter++; if(enemyCounter%3===0) enemyTick(); }
+  if(level.boss && !cleared){ icicleCounter++; if(icicleCounter%(level.icicleEvery||20)===0) dropIcicle(); }
   if(task&&task.build){ updateObjective(); checkBuild(); }
   render();
 }
@@ -249,7 +266,9 @@ function deliver(end){
 }
 function updateHearts(){ var h=el("ludus-hearts"); if(h) h.textContent="✦".repeat(Math.max(0,vitae)); }
 
-function levelClear(){ cleared=true; HUD.flash("✦ Kammaren klarad! Porten är öppen — gå till ↑."); }
+function levelClear(){ cleared=true;
+  HUD.flash(level.boss ? ("✦ "+level.boss.toUpperCase()+" STÖRTAR! Du klättrar mot ljuset — gå till porten ↑.")
+                       : "✦ Kammaren klarad! Porten är öppen — gå till ↑."); }
 function death(){ if(dead) return; dead=true; if(tickTimer){ clearInterval(tickTimer); tickTimer=null; }
   HUD.flash("Du gick under — kammaren börjar om."); setTimeout(function(){ loadLevel(levelIdx); },900); }
 
@@ -257,8 +276,17 @@ function death(){ if(dead) return; dead=true; if(tickTimer){ clearInterval(tickT
 function render(){
   for(var y=0;y<H;y++) for(var x=0;x<W;x++) drawTile(x,y,grid[y][x]);
   drawPlayer(px,py);
-  drawLantern();
+  if(!level.boss) drawLantern();    // bossarena = fullt upplyst
+  drawBoss();
   drawHint();
+}
+function drawBoss(){
+  if(!level.boss) return;
+  var w=TS*5, h=TS*2.4, bx=canvas.width/2-w/2;
+  if(IMG["lucifer"]){ ctx.drawImage(IMG["lucifer"],bx,-TS*0.3,w,h); }
+  else { ctx.fillStyle="rgba(18,8,26,.55)"; ctx.fillRect(0,0,canvas.width,TS*1.3);
+    ctx.fillStyle="#9a2b3a"; ctx.font="bold 22px Cinzel,Georgia"; ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText("▲ "+level.boss+" ▲",canvas.width/2,TS*0.65); }
 }
 function correctHover(){   // är runan man hovrar över den rätta?
   if(!hover||!task||!inB(hover[0],hover[1])) return false;
@@ -290,8 +318,14 @@ function drawTile(x,y,t){
   else if(t==="A"){ glow(X,Y); if(!spr("altar",X,Y)) shapeAltar(X,Y); }
   else if(t==="B"){ drawBuildSlot(X,Y,false,null); }
   else if(t==="b"){ drawBuildSlot(X,Y,true,builtWord[k(x,y)]); }
+  else if(t==="E"){ if(!spr("shade",X,Y)) shapeShade(X,Y); }
+  else if(t==="i"){ if(!spr("icicle",X,Y)) shapeIcicle(X,Y); }
   else if(t==="X"){ if(!spr(cleared?"gate-open":"gate-closed",X,Y)) shapeGate(X,Y,cleared); }
 }
+function shapeShade(X,Y){ ctx.fillStyle="rgba(60,40,70,.85)"; ctx.beginPath(); ctx.arc(X+TS/2,Y+TS/2,TS/2-4,Math.PI,0); ctx.lineTo(X+TS-5,Y+TS-5); ctx.lineTo(X+5,Y+TS-5); ctx.closePath(); ctx.fill();
+  ctx.fillStyle="#d98aa0"; ctx.fillRect(X+TS/2-7,Y+TS/2-2,4,4); ctx.fillRect(X+TS/2+3,Y+TS/2-2,4,4); }
+function shapeIcicle(X,Y){ ctx.fillStyle="#bfe0ee"; ctx.beginPath(); ctx.moveTo(X+TS/2,Y+TS-4); ctx.lineTo(X+TS/2-7,Y+6); ctx.lineTo(X+TS/2+7,Y+6); ctx.closePath(); ctx.fill();
+  ctx.fillStyle="rgba(255,255,255,.6)"; ctx.beginPath(); ctx.moveTo(X+TS/2,Y+TS-8); ctx.lineTo(X+TS/2-3,Y+9); ctx.lineTo(X+TS/2+1,Y+9); ctx.closePath(); ctx.fill(); }
 function drawBuildSlot(X,Y,filled,word){
   ctx.setLineDash(filled?[]:[5,4]); ctx.lineWidth=2;
   ctx.strokeStyle=filled?"#caa24a":"rgba(185,137,47,.6)"; ctx.strokeRect(X+4,Y+4,TS-8,TS-8); ctx.setLineDash([]);
@@ -343,7 +377,7 @@ function move(dx,dy){
   else if(t===" "||t==="A"||t==="B"||t==="b"){ px=nx; py=ny; }
   else if(t==="r"||t==="*"){ if(dy===0) tryPush(nx,ny,dx); }   // knuffa (bara sidled)
   else if(t==="X"){ onExit(); return; }
-  else if(t==="~"){ death(); return; }
+  else if(t==="~"||t==="E"||t==="i"){ death(); return; }
   if(task&&task.build){ updateObjective(); checkBuild(); }
   render();                                           // gravitation/vatten sköts av tick-loopen
 }

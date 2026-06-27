@@ -7,8 +7,9 @@
    ger granne (bara intro-/nya-koncept-kretsar). Större gap + stenar = svårare puss.
    ========================================================================== */
 function buildCave(W,H,o){
+  var fill=o.open?" ":".";   // open=öppen arena (boss); annars jordfylld
   var g=[]; for(var y=0;y<H;y++){ var row=[]; for(var x=0;x<W;x++){
-    row.push((x===0||x===W-1||y===0||y===H-1)?"#":"."); } g.push(row); }
+    row.push((x===0||x===W-1||y===0||y===H-1)?"#":fill); } g.push(row); }
   function set(p,c){ g[p[1]][p[0]]=c; }
   (o.walls||[]).forEach(function(p){ set(p,"#"); });
   if(o.water!=null) for(var x=1;x<W-1;x++) g[o.water][x]="~";
@@ -16,6 +17,7 @@ function buildCave(W,H,o){
   (o.builds||[]).forEach(function(p){ g[p[1]][p[0]]="B"; });   // byggrutor
   (o.runes||[]).forEach(function(p){ g[p[1]][p[0]]="*"; });    // lösa runor (bygge)
   (o.rocks||[]).forEach(function(p){ set(p,"r"); });
+  (o.enemies||[]).forEach(function(p){ set(p,"E"); });         // skuggor
   set(o.start,"@"); set(o.exit,"X");
   return g.map(function(r){ return r.join(""); });
 }
@@ -75,7 +77,7 @@ const LUDUS_LEVELS = [
   { id:"violence", name:"Cīrculus VII — Violentia", sub:"Tempus · imperfekt & perfekt", tint:"#1a140f",
     intro:"Vergilius: Pågående eller avslutat? Transportera rätt tempusruna — men stenarna faller om du gräver under dem.",
     drill:{ type:"tense", count:3, lives:3 },
-    grid:buildCave(16,9,{ start:[1,1], exit:[14,1],
+    grid:buildCave(16,9,{ start:[1,1], exit:[14,1], enemies:[[8,5]],
       rocks:[[4,2],[8,2],[11,2],[6,4],[10,4]],
       pairs:[[2,4,3],[9,4,3],[2,6,3],[7,6,3],[12,6,1],[2,7,2]] }) },
 
@@ -86,11 +88,12 @@ const LUDUS_LEVELS = [
     grid:buildCave(16,8,{ start:[1,1], exit:[14,1],
       runes:[[3,3],[6,3],[9,3],[12,3],[5,4],[10,4]] }) },
 
-  { id:"treachery", name:"Cīrculus IX — Prōditiō", sub:"BOSS · BYGG Vergilius rad", tint:"#16202a",
-    intro:"Vergilius: Bygg min rad, Aen. 6,95: tū nē cēde malīs — knuffa orden så de står i RAD i rätt ordning.",
-    drill:{ type:"boss", count:4, lives:3, build:true },
-    grid:buildCave(16,9,{ start:[1,1], exit:[14,1],
-      runes:[[2,3],[5,3],[8,3],[11,3],[14,3],[3,5],[8,5],[13,5]] }) },
+  { id:"treachery", name:"Cīrculus IX — Prōditiō", sub:"BOSS · Lucifer · bygg Vergilius rad", tint:"#16202a",
+    intro:"Vergilius: Lucifer reser sig ur isen. Bygg min rad på golvet — tū nē cēde malīs — i RAD, medan han slungar istappar och en skugga jagar. Vik inte för olyckorna!",
+    drill:{ type:"boss", count:4, lives:4, build:true },
+    boss:"Lucifer", icicleEvery:18,
+    grid:buildCave(16,10,{ open:true, start:[1,1], exit:[14,1], enemies:[[8,4]],
+      runes:[[2,8],[4,8],[6,8],[9,8],[11,8],[13,8],[3,6],[12,6]] }) },
 
   { id:"stelle", name:"Ad Astra", sub:"Fri träning · 1:a deklinationen", tint:"#0e1530",
     intro:"Vergilius: Du ser stjärnorna. Träna fritt — transportera rätt kasusruna till altaret.",
