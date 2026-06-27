@@ -86,10 +86,10 @@ const LUDUS_LEVELS = [
   { id:"fraud", name:"Cīrculus VIII — Fraus", sub:"Syntax · BYGG satsen", tint:"#231a12",
     intro:"Vergilius: Bygg satsen 'poēta puellam amat' — knuffa ord-runorna så de står i RAD i rätt ordning.",
     drill:{ type:"order", count:3, lives:3, build:true },
-    // BYGG: varje ord på egen pelare (rad 2). Gräv ner det du vill ha till golvet
-    // (rad 4) och knuffa orden intill varandra i rätt ordning — t.ex. mot vänster vägg.
-    grid:buildCave(16,6,{ start:[1,1], exit:[14,1],
-      runes:[[3,2],[5,2],[7,2],[9,2],[11,2],[13,2]] }) },
+    // BYGG: orden ligger utspridda på olika djup (var och en i egen kolumn). Gräv ner
+    // dem du vill ha till golvet och knuffa orden intill varandra i rätt ordning.
+    grid:buildCave(16,8,{ start:[1,1], exit:[14,1],
+      runes:[[3,3],[6,3],[9,3],[12,3],[5,4],[10,4]] }) },
 
   { id:"treachery", name:"Cīrculus IX — Prōditiō", sub:"BOSS · Lucifer · bygg Vergilius rad", tint:"#16202a",
     intro:"Vergilius: Lucifer reser sig ur isen. Bygg min rad på golvet — tū nē cēde malīs — i RAD, medan han slungar istappar och en skugga jagar. Vik inte för olyckorna!",
@@ -99,7 +99,7 @@ const LUDUS_LEVELS = [
     // Lucifer slungar istappar ner i schakten (kol 4, 8, 11).
     grid:buildCave(16,11,{ start:[1,1], exit:[14,1],
       tunnel:5, shafts:[4,8,11], enemies:[[7,5]],
-      runes:[[2,2],[3,2],[5,2],[6,2],[9,2],[10,2],[12,2],[13,2]] }) },
+      runes:[[2,2],[6,2],[10,2],[13,2],[3,7],[7,7],[9,7],[12,7]] }) },
 
   { id:"stelle", name:"Ad Astra", sub:"Fri träning · 1:a deklinationen", tint:"#0e1530",
     intro:"Vergilius: Du ser stjärnorna. Träna fritt — transportera rätt kasusruna till altaret.",
