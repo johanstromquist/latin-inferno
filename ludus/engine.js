@@ -177,7 +177,7 @@ function gravityStep(){
     var below=grid[y+1][x], pBelow=(px===x&&py===y+1);
     if(pBelow){ if(falling[k(x,y)]&&!settling){ death(); return false; } if(t==="i"){ grid[y][x]=" "; moved=true; } continue; }
     if(below===" "){ fall(x,y,x,y+1); nf[k(x,y+1)]=1; moved=true; }
-    else if(below==="E"&&!settling){ if(t==="r"){ squashEnemy(x,y+1); fall(x,y,x,y+1); nf[k(x,y+1)]=1; moved=true; }   // sten krossar skugga
+    else if(below==="E"&&!settling){ if(t==="r"||t==="*"){ squashEnemy(x,y+1); fall(x,y,x,y+1); nf[k(x,y+1)]=1; moved=true; }   // sten/runa krossar skuggan
       else if(t==="i"){ grid[y][x]=" "; moved=true; } }                                                              // istapp smälter, skadar ej skuggan
     else if(below==="A"&&t==="*"&&!settling){ consumeIntoAltar(x,y); moved=true; }
     else if(below==="B"&&t==="*"&&!settling&&falling[k(x,y)]){ buildPush(x,y,x,y+1); moved=true; }
