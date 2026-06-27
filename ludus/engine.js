@@ -63,8 +63,9 @@ function loadLevel(i){
 // Runorna har FASTA ändelser (sätts en gång vid start); de FÖRSVINNER när de
 // levereras och kommer inte tillbaka. Uppgiften väljs bland de ändelser som
 // fortfarande finns kvar i grottan — som att samla rätt diamanter i Boulder Dash.
+function isImplemented(ty){ return ty==="decline1"||ty==="ablative"; }   // övriga drilltyper byggs härnäst
 function assignGemEndings(){
-  if(!level.drill||!level.drill.type||level.drill.type==="tutorial") return;
+  if(!level.drill||!isImplemented(level.drill.type)) return;
   var reals=level.drill.type==="ablative"?["ā","ō"]:["a","am","ae","ā"];
   var distract=level.drill.type==="ablative"?["am","um","īs"]:["ō","um","ās","īs"];
   var n=origGem.length, list=[];
@@ -91,15 +92,15 @@ function genTask(d, living){
   return null;
 }
 function nextTask(){
-  if(level.drill && level.drill.type!=="tutorial"){
+  if(level.drill && isImplemented(level.drill.type)){
     task=genTask(level.drill, livingEndings());
     if(!task && progress<needed){ HUD.flash("Inga rätta runor kvar — kammaren börjar om."); setTimeout(function(){ loadLevel(levelIdx); },1000); return; }
-  } else task=null;
+  } else task=null;   // tutorial + ej-byggda kretsar: ingen drill, ingen omstart
   updateObjective();
 }
 function updateObjective(){
   var o=el("ludus-task");
-  if(!task){ o.innerHTML="<span class='obj-ph'>"+(level.drill&&level.drill.type==="tutorial"?"Lär dig stigen — gräv dig fram och nå porten ↑":"Drill byggs i nästa pass — fysiken är spelbar")+"</span>"; return; }
+  if(!task){ o.innerHTML="<span class='obj-ph'>"+(level.drill&&level.drill.type==="tutorial"?"Lär dig stigen — gräv dig fram och nå porten ↑":"Denna krets byggs härnäst — gå till porten ↑ för att fortsätta")+"</span>"; return; }
   o.innerHTML="<span class='obj-lead'>Bär runan</span> <span class='obj-end'>-"+task.goal+"</span> "+
     "<span class='obj-lead'>till altaret</span> &nbsp;·&nbsp; <span class='obj-word'>"+task.tip+"</span> "+
     "&nbsp;·&nbsp; <span class='obj-prog'>✦ "+progress+"/"+needed+"</span>";
