@@ -56,6 +56,25 @@ body{
 .node-train{display:inline-block;margin:.2em .25em 0 0;font-size:.7rem;color:var(--gold)}
 .ludus-trained{color:#7bbf6a !important}
 
+/* ---------- final-filmsekvens (cutscene) ---------- */
+#cutscene{position:fixed;inset:0;z-index:50;background:#05060a;overflow:hidden}
+#cutscene-stage{position:absolute;inset:0;transition:opacity 1s ease;opacity:1;background:#05060a}
+#cutscene-stage.fading{opacity:0}
+#cutscene-frame{width:100%;height:100%;object-fit:cover;display:block}
+#cutscene-cap{position:absolute;left:0;right:0;bottom:0;padding:3rem 1.5rem 2.4rem;
+  background:linear-gradient(0deg,rgba(0,0,0,.88),rgba(0,0,0,.4) 60%,transparent);
+  text-align:center;transition:opacity .8s ease}
+#cutscene-cap.cap-hidden{opacity:0}
+.cs-la{font-family:var(--display);font-size:clamp(1.2rem,3.6vw,1.7rem);color:var(--gold-bright);
+  font-style:italic;letter-spacing:.02em;text-shadow:0 2px 10px #000;line-height:1.3}
+.cs-sv{font-family:var(--serif);font-size:clamp(.95rem,2.4vw,1.15rem);color:var(--ink);
+  margin-top:.5em;text-shadow:0 1px 6px #000}
+.cs-ref{font-size:.8rem;color:var(--muted);margin-top:.6em;font-style:italic}
+#cutscene-skip{position:absolute;top:1rem;right:1.2rem;z-index:2;color:#cabfa8;
+  font-size:.85rem;background:rgba(0,0,0,.35);padding:.3em .7em;border-radius:6px}
+#cutscene-skip:hover{color:var(--gold-bright)}
+#cutscene.cs-end #cutscene-stage{opacity:0}
+
 /* ---------- titel ---------- */
 .title-hero{min-height:100vh;display:flex;align-items:center;justify-content:center;
   text-align:center;padding:2rem 1.2rem;position:relative;

@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=2">
+<link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
 
@@ -70,6 +70,17 @@
     </div>
   </div>
 
+  <!-- FINAL-FILMSEKVENS (cutscene) -->
+  <div id="cutscene" hidden>
+    <div id="cutscene-stage"><img id="cutscene-frame" alt=""></div>
+    <div id="cutscene-cap">
+      <div class="cs-la" id="cs-la"></div>
+      <div class="cs-sv" id="cs-sv"></div>
+      <div class="cs-ref" id="cs-ref"></div>
+    </div>
+    <button id="cutscene-skip" class="btn-link">Hoppa över &rsaquo;</button>
+  </div>
+
   <!-- OM (overlay) -->
   <div id="about-overlay" class="overlay" hidden>
     <div class="overlay-card">
@@ -85,7 +96,7 @@
 
 </div>
 
-<script src="js/data.js?v=2"></script>
-<script src="js/engine.js?v=2"></script>
+<script src="js/data.js?v=3"></script>
+<script src="js/engine.js?v=3"></script>
 </body>
 </html>

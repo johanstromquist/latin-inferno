@@ -20,6 +20,42 @@ var ART={
   ice:"linear-gradient(160deg,#16202a,#080a0c)",stars:"linear-gradient(160deg,#0e1530,#070611)"};
 function artBg(k,f){ return "url('assets/img/"+f+"'), "+(ART[k]||"linear-gradient(160deg,#241d14,#0b0907)"); }
 
+/* ---------- final-filmsekvens (cutscene): uppstigningen ur helvetet ---------- */
+var CUTSCENE=[
+  { id:1, frames:4, bg:"#0a0d16", frameMs:620, dur:6200, la:"",
+    sv:"Längst ner i världen, fastfrusen i evig is, väntade Lucifer. Härifrån fanns blott en väg — uppåt.", ref:"" },
+  { id:2, frames:4, bg:"#181410", frameMs:260, dur:5600, la:"",
+    sv:"Vergilius gick före. Vi klättrade genom den dolda klyftan, ledda av en enda låga.", ref:"" },
+  { id:3, frames:4, bg:"#0f1418", frameMs:520, dur:5200, la:"",
+    sv:"Och i mörkret, långt fram — en glimt av dagsljus.", ref:"" },
+  { id:4, frames:4, bg:"#16202a", frameMs:600, dur:5600, la:"",
+    sv:"Vi steg ut på stranden vid gryningens berg. Luften var ren och full av ljus.", ref:"" },
+  { id:5, frames:4, bg:"#0e1530", frameMs:560, dur:9500,
+    la:"E quindi uscimmo a riveder le stelle", sv:"Och så kom vi ut, för att åter se stjärnorna. — Vale, discipule.",
+    ref:"Dante, Inferno XXXIV, 139 · Vergilius tar farväl" }
+];
+var csState={timer:null,frameTimer:null};
+function playCutscene(){ var ov=el("cutscene"); if(!ov) return; ov.hidden=false; playScene(0); }
+function playScene(i){
+  var stage=el("cutscene-stage"), cap=el("cutscene-cap"), img=el("cutscene-frame");
+  if(i>=CUTSCENE.length){ endCutscene(); return; }
+  var sc=CUTSCENE[i], f=0;
+  function setFrame(){ stage.style.background=sc.bg; img.src="assets/cutscene/s"+sc.id+"f"+(f+1)+".png"; }
+  img.onerror=function(){ img.style.visibility="hidden"; };
+  img.onload=function(){ img.style.visibility="visible"; };
+  stage.classList.remove("fading"); cap.classList.remove("cap-hidden");
+  el("cs-la").textContent=sc.la||""; el("cs-sv").textContent=sc.sv||""; el("cs-ref").textContent=sc.ref||"";
+  setFrame();
+  clearInterval(csState.frameTimer); csState.frameTimer=setInterval(function(){ f=(f+1)%sc.frames; setFrame(); }, sc.frameMs);
+  clearTimeout(csState.timer);
+  csState.timer=setTimeout(function(){
+    stage.classList.add("fading"); cap.classList.add("cap-hidden");
+    setTimeout(function(){ clearInterval(csState.frameTimer); playScene(i+1); }, 1000);
+  }, sc.dur);
+}
+function endCutscene(){ clearInterval(csState.frameTimer); clearTimeout(csState.timer);
+  var ov=el("cutscene"); if(ov) ov.hidden=true; openCompass(); }
+
 /* ---------- uttal (klassiskt) ---------- */
 function toPhonetic(s){
   s=s.toLowerCase();
@@ -113,6 +149,7 @@ el("btn-to-title").onclick=function(){ show("screen-title"); refreshTitle(); };
 el("btn-compass").onclick=openCompass;
 el("compass-close").onclick=function(){ el("compass-overlay").hidden=true; };
 el("btn-to-map").onclick=function(){ show("screen-map"); renderMap(); };
+el("cutscene-skip").onclick=endCutscene;
 
 /* ---------- kartan (nedstigningen) ---------- */
 function renderMap(){
@@ -351,7 +388,11 @@ function updateFoot(foot,si){
       (stagePerfect(si)?" <span class='perfect'>(100 % — även A-uppgifterna)</span>":"")));
     if(next){ var b=mk("button","btn btn-primary","Stig vidare &rarr; "+INFERNO.stages[si+1].sv);
       b.onclick=function(){ openStage(si+1); }; foot.appendChild(b); }
-    else { var b2=mk("button","btn btn-primary","Se din betygskompass"); b2.onclick=openCompass; foot.appendChild(b2); }
+    else {
+      var cb=mk("button","btn btn-primary","&#9656; Se finalen"); cb.onclick=function(){ playCutscene(); }; foot.appendChild(cb);
+      var b2=mk("button","btn","Se din betygskompass"); b2.onclick=openCompass; foot.appendChild(b2);
+      if(!S.sawFinale){ S.sawFinale=true; save(); setTimeout(playCutscene,700); }   // spela en gång automatiskt
+    }
     foot.appendChild(document.createElement("br"));
   } else {
     var req=requiredIdx(INFERNO.stages[si]).filter(function(ci){return !isPassed(si,ci);}).length;
