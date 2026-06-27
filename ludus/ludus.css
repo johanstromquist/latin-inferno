@@ -41,8 +41,8 @@ body{margin:0;background:radial-gradient(120% 80% at 50% -10%,var(--tint),#0a080
 
 #ludus-stage{position:relative;display:flex;justify-content:center;
   border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#0a0907}
-#ludus-stage.boss-stage{overflow:visible;margin-top:84px}   /* plats för Lucifers huvud/vingar ovanför fältet */
-#boss-img{position:absolute;left:50%;transform:translateX(-50%);top:-78px;width:62%;max-width:430px;
+#ludus-stage.boss-stage{overflow:visible;margin-top:46px}   /* plats för Lucifers huvud/vingar ovanför fältet */
+#boss-img{position:absolute;left:50%;transform:translateX(-50%);top:-42px;width:32%;max-width:220px;
   height:auto;pointer-events:none;z-index:4;filter:drop-shadow(0 6px 16px rgba(0,0,0,.7))}
 #ludus-canvas{display:block;max-width:100%;height:auto;image-rendering:auto}
 .flash{position:absolute;left:50%;top:14px;transform:translateX(-50%);
