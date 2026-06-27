@@ -50,12 +50,15 @@ const LUDUS_LEVELS = [
     grid:buildCave(16,9,{ start:[1,1], exit:[14,7],
       pairs:[[2,2,4],[2,4,4],[2,6,4],[9,3,3],[9,5,3],[9,7,3]] }) },
 
-  { id:"glutt", name:"Cīrculus III — Gula", sub:"Verb · presens (Cerberus)", tint:"#161c20",
-    intro:"Vergilius: Cerberus har tre strupar. Knuffa rätt personformsruna genom gångarna till ett altare.",
+  { id:"glutt", name:"Cīrculus III — Gula", sub:"Verb · presens · CERBERUS", tint:"#161c20",
+    intro:"Vergilius: Cerberus tre strupar gapar i gyttjan. Mata var och en med rätt personform — men hans huggtänder hugger ner i schakten. Mätta alla tre struparna.",
     drill:{ type:"verbpres", count:3, lives:3 },
+    // CERBERUS mini-boss: feed three throats (verbpres) while he snaps fangs down the
+    // two shafts (kol 5, 11) you must cross. Tame him by sating all three.
+    boss:"Cerberus", bossSprite:"cerberus", bossDefeat:"tame", hazardKind:"fang", hazardEvery:15, shafts:[5,11],
     grid:buildCave(16,9,{ start:[1,1], exit:[14,1],
-      walls:[[6,3],[6,4],[6,5],[10,3],[10,4],[10,5]],
-      pairs:[[2,3,2],[12,3,1],[2,6,3],[7,6,3],[12,6,1],[7,2,1]] }) },
+      clear:[[5,1],[5,2],[5,3],[5,4],[5,5],[5,6],[11,1],[11,2],[11,3],[11,4],[11,5],[11,6]],
+      pairs:[[2,3,1],[7,3,1],[12,3,1],[2,6,1],[7,6,1],[12,6,1]] }) },
 
   { id:"greed", name:"Cīrculus IV — Avāritia", sub:"Kasus · genitiv & dativ", tint:"#241d14",
     intro:"Vergilius: Vem äger, vem får? Transportera rätt runa förbi de tunga stenarna till altaret.",

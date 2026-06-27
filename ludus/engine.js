@@ -229,7 +229,7 @@ function tick(){
   gravityStep();
   if(level.drill&&level.drill.rising){ wtick++; if(wtick%(level.drill.riseEvery||22)===0) raiseWater(); }
   if(enemies.length){ enemyCounter++; if(enemyCounter%3===0) enemyTick(); }
-  if(level.boss && !cleared){ icicleCounter++; if(icicleCounter%(level.icicleEvery||20)===0) dropIcicle(); }
+  if(level.boss && !cleared){ icicleCounter++; if(icicleCounter%(level.hazardEvery||level.icicleEvery||20)===0) dropIcicle(); }
   if(task&&task.build){ updateObjective(); checkBuild(); }
   render();
 }
@@ -281,12 +281,14 @@ function updateHearts(){ var h=el("ludus-hearts"); if(h) h.textContent="✦".rep
 
 function levelClear(){ cleared=true;
   if(level.boss){ var bimg=el("boss-img"), bstage=el("ludus-stage");
-    icicleCounter=-99999;                                   // sluta slunga istappar
-    bimg.classList.add("crash"); bstage.classList.add("shake");
-    setTimeout(function(){ bstage.classList.remove("shake"); },1100);
+    icicleCounter=-99999;                                   // stoppa hotet
+    if(level.bossDefeat==="tame"){ bimg.classList.add("tamed"); }   // Cerberus mättad → lägger sig
+    else { bimg.classList.add("crash"); bstage.classList.add("shake"); setTimeout(function(){ bstage.classList.remove("shake"); },1100); }
   }
-  HUD.flash(level.boss ? ("✦ "+level.boss.toUpperCase()+" STÖRTAR! Du klättrar mot ljuset — gå till porten ↑.")
-                       : "✦ Kammaren klarad! Porten är öppen — gå till ↑."); }
+  HUD.flash(level.boss ? (level.bossDefeat==="tame"
+        ? "✦ "+level.boss.toUpperCase()+" MÄTTAD! De tre struparna tystnar — gå till porten ↑."
+        : "✦ "+level.boss.toUpperCase()+" STÖRTAR! Du klättrar mot ljuset — gå till porten ↑.")
+      : "✦ Kammaren klarad! Porten är öppen — gå till ↑."); }
 function death(){ if(dead) return; dead=true; if(tickTimer){ clearInterval(tickTimer); tickTimer=null; }
   HUD.flash("Du gick under — kammaren börjar om."); setTimeout(function(){ loadLevel(levelIdx); },900); }
 
@@ -300,14 +302,20 @@ function render(){
 }
 function setupBoss(){
   var stage=el("ludus-stage"), img=el("boss-img");
-  img.classList.remove("crash"); stage.classList.remove("shake");   // nollställ bossens fall
-  if(level.boss){ stage.classList.add("boss-stage"); if(img.getAttribute("src")!=="sprites/lucifer.png") img.src="sprites/lucifer.png"; img.hidden=false; }
+  img.classList.remove("crash"); img.classList.remove("tamed"); stage.classList.remove("shake");   // nollställ
+  if(level.boss){ var src="sprites/"+(level.bossSprite||"lucifer")+".png";
+    img.onerror=function(){ img.hidden=true; };   // saknad sprite → göm trasig bild, canvas ritar namnet
+    stage.classList.add("boss-stage"); if(img.getAttribute("src")!==src){ img.hidden=false; img.src=src; } else img.hidden=false; }
   else { stage.classList.remove("boss-stage"); img.hidden=true; }
 }
-function drawBoss(){   // Lucifer ritas som HTML-bild ovanför fältet (setupBoss); här bara skuggat tak
+function drawBoss(){   // bossen ritas som HTML-bild ovanför fältet (setupBoss); här skuggat tak + textfallback
   if(!level.boss) return;
   var g=ctx.createLinearGradient(0,0,0,TS*1.4); g.addColorStop(0,"rgba(10,6,16,.7)"); g.addColorStop(1,"rgba(10,6,16,0)");
   ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,TS*1.4);
+  var bi=el("boss-img");
+  if(!bi || bi.naturalWidth===0){   // sprite saknas/laddar ännu → rita namnet
+    ctx.fillStyle="#9a2b3a"; ctx.font="bold 20px Cinzel,Georgia"; ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText("▲ "+level.boss+" ▲", canvas.width/2, TS*0.6); }
 }
 function correctHover(){   // är runan man hovrar över den rätta?
   if(!hover||!task||!inB(hover[0],hover[1])) return false;
@@ -344,13 +352,17 @@ function drawTile(x,y,t){
     ctx.save(); ctx.shadowColor="rgba("+gc+","+ga.toFixed(2)+")"; ctx.shadowBlur=16;
     if(!spr(level.enemySprite||"shade",X,Y)) shapeShade(X,Y);
     ctx.shadowBlur=0; ctx.restore(); }
-  else if(t==="i"){ if(!spr("icicle",X,Y)) shapeIcicle(X,Y); }
+  else if(t==="i"){ var hz=level.hazardKind||"icicle"; if(!spr(hz,X,Y)){ if(hz==="fang") shapeFang(X,Y); else shapeIcicle(X,Y); } }
   else if(t==="X"){ if(!spr(cleared?"gate-open":"gate-closed",X,Y)) shapeGate(X,Y,cleared); }
 }
 function shapeShade(X,Y){ ctx.fillStyle="rgba(60,40,70,.85)"; ctx.beginPath(); ctx.arc(X+TS/2,Y+TS/2,TS/2-4,Math.PI,0); ctx.lineTo(X+TS-5,Y+TS-5); ctx.lineTo(X+5,Y+TS-5); ctx.closePath(); ctx.fill();
   ctx.fillStyle="#d98aa0"; ctx.fillRect(X+TS/2-7,Y+TS/2-2,4,4); ctx.fillRect(X+TS/2+3,Y+TS/2-2,4,4); }
 function shapeIcicle(X,Y){ ctx.fillStyle="#bfe0ee"; ctx.beginPath(); ctx.moveTo(X+TS/2,Y+TS-4); ctx.lineTo(X+TS/2-7,Y+6); ctx.lineTo(X+TS/2+7,Y+6); ctx.closePath(); ctx.fill();
   ctx.fillStyle="rgba(255,255,255,.6)"; ctx.beginPath(); ctx.moveTo(X+TS/2,Y+TS-8); ctx.lineTo(X+TS/2-3,Y+9); ctx.lineTo(X+TS/2+1,Y+9); ctx.closePath(); ctx.fill(); }
+function shapeFang(X,Y){ var cx=X+TS/2;   // Cerberus huggtand: krökt, benvit
+  ctx.fillStyle="#efe6d2"; ctx.beginPath(); ctx.moveTo(cx-8,Y+6); ctx.quadraticCurveTo(cx-3,Y+TS*0.5,cx,Y+TS-5);
+  ctx.quadraticCurveTo(cx+4,Y+TS*0.5,cx+8,Y+6); ctx.quadraticCurveTo(cx,Y+10,cx-8,Y+6); ctx.closePath(); ctx.fill();
+  ctx.fillStyle="rgba(120,80,70,.5)"; ctx.beginPath(); ctx.arc(cx,Y+9,2.5,0,7); ctx.fill(); }   // rotfäste
 function drawBuildSlot(X,Y,filled,word){
   ctx.setLineDash(filled?[]:[5,4]); ctx.lineWidth=2;
   ctx.strokeStyle=filled?"#caa24a":"rgba(185,137,47,.6)"; ctx.strokeRect(X+4,Y+4,TS-8,TS-8); ctx.setLineDash([]);

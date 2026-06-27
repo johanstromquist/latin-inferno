@@ -51,6 +51,10 @@ body{margin:0;background:radial-gradient(120% 80% at 50% -10%,var(--tint),#0a080
   100%{ transform:translateX(-50%) translateY(560px) rotate(936deg) scale(.18); opacity:0; }
 }
 #boss-img.crash{ animation:lucifer-crash 1.7s cubic-bezier(.45,.05,.9,.95) forwards; z-index:6; }
+/* Cerberus mättad: lugnar sig och sjunker undan */
+@keyframes boss-tame{ 0%{ transform:translateX(-50%) translateY(0) scale(1); opacity:1; filter:none; }
+  100%{ transform:translateX(-50%) translateY(46px) scale(.82); opacity:0; filter:grayscale(.6); } }
+#boss-img.tamed{ animation:boss-tame 1.5s ease-in forwards; }
 @keyframes stage-shake{ 0%,100%{transform:translate(0,0)} 20%{transform:translate(-5px,3px)} 40%{transform:translate(5px,-2px)} 60%{transform:translate(-4px,2px)} 80%{transform:translate(3px,-3px)} }
 #ludus-stage.shake{ animation:stage-shake .5s ease-in-out 2; }
 #ludus-canvas{display:block;max-width:100%;height:auto;image-rendering:auto}
