@@ -78,7 +78,7 @@ const LUDUS_LEVELS = [
 
   { id:"violence", name:"Cīrculus VII — Violentia", sub:"Tempus · imperfekt & perfekt", tint:"#1a140f",
     intro:"Vergilius: Pågående eller avslutat? Transportera rätt tempusruna — men stenarna faller om du gräver under dem.",
-    drill:{ type:"tense", count:3, lives:3 },
+    drill:{ type:"tense", count:3, lives:3 }, enemySprite:"minotaur",
     grid:buildCave(16,9,{ start:[1,1], exit:[14,1], enemies:[[8,5]],
       rocks:[[4,2],[8,2],[11,2],[6,4],[10,4]],
       pairs:[[2,4,3],[9,4,3],[2,6,3],[7,6,3],[12,6,1],[2,7,2]] }) },
@@ -93,7 +93,7 @@ const LUDUS_LEVELS = [
   { id:"treachery", name:"Cīrculus IX — Prōditiō", sub:"BOSS · Lucifer · bygg Vergilius rad", tint:"#16202a",
     intro:"Vergilius: Lucifer reser sig ur isen. Bygg min rad på golvet — tū nē cēde malīs — i RAD, medan han slungar istappar och en skugga jagar. Vik inte för olyckorna!",
     drill:{ type:"boss", count:4, lives:4, build:true },
-    boss:"Lucifer", icicleEvery:16,
+    boss:"Lucifer", icicleEvery:16, shafts:[4,8,11],
     // regelrätt jordkarta: gräv & bygg satsen; skuggan patrullerar tunneln (rad 5),
     // Lucifer slungar istappar ner i schakten (kol 4, 8, 11).
     grid:buildCave(16,10,{ start:[1,1], exit:[14,1],

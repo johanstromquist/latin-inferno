@@ -19,7 +19,7 @@ var hover=null, hintOn=true;
 var enemies=[], enemyCounter=0, icicleCounter=0;
 
 /* ---------- sprites ---------- */
-var SPRITE_FILES=["dirt","wall","boulder","rune","altar","water","gate-closed","gate-open","dante"];
+var SPRITE_FILES=["dirt","wall","boulder","rune","altar","water","gate-closed","gate-open","dante","shade","lucifer","icicle","minotaur"];
 var IMG={};
 SPRITE_FILES.forEach(function(n){ var im=new Image();
   im.onload=function(){ IMG[n]=im; if(grid) render(); }; im.src="sprites/"+n+".png"; });
@@ -177,7 +177,8 @@ function gravityStep(){
     var below=grid[y+1][x], pBelow=(px===x&&py===y+1);
     if(pBelow){ if(falling[k(x,y)]&&!settling){ death(); return false; } if(t==="i"){ grid[y][x]=" "; moved=true; } continue; }
     if(below===" "){ fall(x,y,x,y+1); nf[k(x,y+1)]=1; moved=true; }
-    else if(below==="E"&&!settling){ squashEnemy(x,y+1); fall(x,y,x,y+1); nf[k(x,y+1)]=1; moved=true; }   // krossa skugga
+    else if(below==="E"&&!settling){ if(t==="r"){ squashEnemy(x,y+1); fall(x,y,x,y+1); nf[k(x,y+1)]=1; moved=true; }   // sten krossar skugga
+      else if(t==="i"){ grid[y][x]=" "; moved=true; } }                                                              // istapp smälter, skadar ej skuggan
     else if(below==="A"&&t==="*"&&!settling){ consumeIntoAltar(x,y); moved=true; }
     else if(below==="B"&&t==="*"&&!settling&&falling[k(x,y)]){ buildPush(x,y,x,y+1); moved=true; }
     else if(t==="i"){ grid[y][x]=" "; moved=true; }                                                       // istapp landar → smälter
@@ -189,16 +190,28 @@ function gravityStep(){
   falling=nf; return moved;
 }
 function squashEnemy(x,y){ for(var i=0;i<enemies.length;i++) if(enemies[i].x===x&&enemies[i].y===y){ enemies.splice(i,1); HUD.flash("Skuggan krossas!"); return; } }
+function bfsStep(sx,sy){   // nästa steg mot spelaren genom öppna gångar (jagar)
+  var q=[[sx,sy]], par={}; par[sx+","+sy]=true; var D=[[0,-1],[0,1],[-1,0],[1,0]];
+  while(q.length){ var c=q.shift();
+    for(var d=0;d<4;d++){ var nx=c[0]+D[d][0], ny=c[1]+D[d][1]; if(!inB(nx,ny)) continue;
+      var kk=nx+","+ny; if(par[kk]!==undefined) continue;
+      var isP=(nx===px&&ny===py); if(grid[ny][nx]!==" " && !isP) continue;
+      par[kk]=[c[0],c[1]];
+      if(isP){ var cur=[nx,ny], p=par[kk]; while(p!==true && !(p[0]===sx&&p[1]===sy)){ cur=p; p=par[p[0]+","+p[1]]; } return cur; }
+      q.push([nx,ny]);
+    } }
+  return null;
+}
 function enemyTick(){
   for(var i=0;i<enemies.length;i++){ var e=enemies[i]; if(grid[e.y][e.x]!=="E"){ enemies.splice(i,1); i--; continue; }
-    var nx=e.x+e.dir;
-    if(inB(nx,e.y) && grid[e.y][nx]===" "){ grid[e.y][e.x]=" "; e.x=nx; grid[e.y][e.x]="E"; }
-    else e.dir=-e.dir;
+    var step=bfsStep(e.x,e.y);                    // jaga via öppna gångar
+    if(step){ grid[e.y][e.x]=" "; e.x=step[0]; e.y=step[1]; grid[e.y][e.x]="E"; }
+    else { var nx=e.x+e.dir; if(inB(nx,e.y)&&grid[e.y][nx]===" "){ grid[e.y][e.x]=" "; e.x=nx; grid[e.y][e.x]="E"; } else e.dir=-e.dir; }  // patrullera om ingen väg
     if(e.x===px && e.y===py){ death(); return; }
   }
 }
-function dropIcicle(){ var tries=0; while(tries++<10){ var x=1+Math.floor(Math.random()*(W-2));
-  if(grid[1][x]===" "){ grid[1][x]="i"; return; } } }
+function dropIcicle(){ var cols=level.shafts||[]; if(!cols.length) return;   // bara i schakten (aldrig på startrutan)
+  for(var t=0;t<6;t++){ var x=cols[Math.floor(Math.random()*cols.length)]; if(grid[1][x]===" "){ grid[1][x]="i"; return; } } }
 function settle(){ settling=true; var g=0; while(gravityStep()&&g++<500){} settling=false; falling={}; }
 function raiseWater(){
   var top=-1; for(var y=0;y<H&&top<0;y++) for(var x=0;x<W;x++){ if(grid[y][x]==="~"){ top=y; break; } }
@@ -318,7 +331,7 @@ function drawTile(x,y,t){
   else if(t==="A"){ glow(X,Y); if(!spr("altar",X,Y)) shapeAltar(X,Y); }
   else if(t==="B"){ drawBuildSlot(X,Y,false,null); }
   else if(t==="b"){ drawBuildSlot(X,Y,true,builtWord[k(x,y)]); }
-  else if(t==="E"){ if(!spr("shade",X,Y)) shapeShade(X,Y); }
+  else if(t==="E"){ if(!spr(level.enemySprite||"shade",X,Y)) shapeShade(X,Y); }
   else if(t==="i"){ if(!spr("icicle",X,Y)) shapeIcicle(X,Y); }
   else if(t==="X"){ if(!spr(cleared?"gate-open":"gate-closed",X,Y)) shapeGate(X,Y,cleared); }
 }
