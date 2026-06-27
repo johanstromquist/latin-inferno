@@ -99,7 +99,7 @@ const LUDUS_LEVELS = [
     // Lucifer slungar istappar ner i schakten (kol 4, 8, 11).
     grid:buildCave(16,11,{ start:[1,1], exit:[14,1],
       tunnel:5, shafts:[4,8,11], enemies:[[7,5]],
-      runes:[[2,2],[6,2],[10,2],[13,2],[3,7],[7,7],[9,7],[12,7]] }) },
+      runes:[[2,2],[6,2],[10,2],[13,2],[2,7],[6,7],[10,7],[13,7]] }) },
 
   { id:"stelle", name:"Ad Astra", sub:"Fri träning · 1:a deklinationen", tint:"#0e1530",
     intro:"Vergilius: Du ser stjärnorna. Träna fritt — transportera rätt kasusruna till altaret.",
