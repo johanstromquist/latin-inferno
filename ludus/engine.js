@@ -153,7 +153,7 @@ function updateObjective(){
   if(task.build){
     var best=bestBuildRun(), parts="";
     task.seq.forEach(function(w,i){ parts+=(i<best?"<b class='built'>"+w+"</b>":"<span class='unbuilt'>"+w+"</span>")+" "; });
-    o.innerHTML="<span class='obj-lead'>Lägg ord-runorna i RAD, i denna ordning:</span> <span class='obj-word'>"+parts+"</span> &nbsp;·&nbsp; <span class='obj-prog'>✦ "+best+"/"+task.seq.length+"</span>"; return;
+    o.innerHTML="<span class='obj-lead'>Skjut ord-runorna intill varandra i RAD, i ordning:</span> <span class='obj-word'>"+parts+"</span> &nbsp;·&nbsp; <span class='obj-prog'>✦ "+best+"/"+task.seq.length+"</span>"; return;
   }
   // visa facit bara på intro-kretsar (reveal); annars måste man kunna formen själv
   var lead = (level.drill&&level.drill.reveal)
@@ -241,22 +241,20 @@ function tryPush(x,y,dx){
   if(b==="B"){ buildPush(x,y,bx,y); return true; }
   return false;
 }
-function buildPush(rx,ry,bx,by){
+function buildPush(rx,ry,bx,by){   // bär ord till verstavlan (◳) i rätt ordning
   if(!task||!task.build) return;
-  var idx=-1; for(var i=0;i<buildSlots.length;i++) if(buildSlots[i][0]===bx&&buildSlots[i][1]===by){ idx=i; break; }
-  if(idx!==progress){ HUD.flash("Nästa ord ska till byggruta "+(progress+1)+" (vänster→höger)."); return; }
-  var token=labels[k(rx,ry)];
-  if(token===task.goal){
+  var pos=built.length, token=labels[k(rx,ry)];
+  if(token===task.seq[pos]){
     grid[ry][rx]=" "; delLabel(rx,ry); px=rx; py=ry;
-    grid[by][bx]="b"; builtWord[k(bx,by)]=token; built.push(token);
-    progress++; streak++; el("ludus-streak").textContent=streak;
-    HUD.flash("✦ "+token+"  ("+progress+"/"+needed+")");
-    if(progress>=needed) levelClear(); else nextTask();
+    built.push(token); builtWord[k(bx,by)]=built.join(" ");   // visa versen på tavlan
+    streak++; el("ludus-streak").textContent=streak;
+    HUD.flash("✦ "+token+"  ("+built.length+"/"+task.seq.length+")");
+    if(built.length>=task.seq.length) levelClear();
     updateObjective();
   } else {
     streak=0; el("ludus-streak").textContent=streak; vitae--; updateHearts();
     if(vitae<=0){ HUD.flash("Fel ord. Kammaren börjar om."); setTimeout(function(){ loadLevel(levelIdx); },900); return; }
-    HUD.flash("Fel ord — bygg satsen i ordning. ("+vitae+" liv)");
+    HUD.flash("Fel ord — nästa är '"+task.seq[pos]+"'. ("+vitae+" liv kvar)"); updateObjective();
   }
 }
 function consumeIntoAltar(x,y){
