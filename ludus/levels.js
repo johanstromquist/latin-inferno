@@ -51,7 +51,7 @@ const LUDUS_LEVELS = [
       pairs:[[2,2,4],[2,4,4],[2,6,4],[9,3,3],[9,5,3],[9,7,3]] }) },
 
   { id:"glutt", name:"Cīrculus III — Gula", sub:"Verb · presens (Cerberus)", tint:"#161c20",
-    intro:"Vergilius: Cerberus tre strupar. Knuffa rätt personformsruna genom gångarna till ett altare.",
+    intro:"Vergilius: Cerberus har tre strupar. Knuffa rätt personformsruna genom gångarna till ett altare.",
     drill:{ type:"verbpres", count:3, lives:3 },
     grid:buildCave(16,9,{ start:[1,1], exit:[14,1],
       walls:[[6,3],[6,4],[6,5],[10,3],[10,4],[10,5]],
@@ -77,7 +77,7 @@ const LUDUS_LEVELS = [
       walls:[[8,2],[8,5],[8,6]],
       pairs:[[2,3,5],[2,6,5],[10,3,3],[10,6,3],[2,2,3],[9,7,2]] }) },
 
-  { id:"violence", name:"Cīrculus VII — Violentia", sub:"Tempus · imperfekt & perfekt", tint:"#1a140f",
+  { id:"violence", name:"Cīrculus VII — Violentia", sub:"Tempus · presens, imperfekt, perfekt", tint:"#1a140f",
     intro:"Vergilius: Pågående eller avslutat? Transportera rätt tempusruna — men stenarna faller om du gräver under dem.",
     drill:{ type:"tense", count:3, lives:3 }, enemySprite:"minotaur",
     // 3x3-kammare (kol 6-8, rad 4-6) med en OBLIGATORISK runa i mitten (7,5): alla tre
@@ -97,7 +97,7 @@ const LUDUS_LEVELS = [
       runes:[[3,3],[6,3],[9,3],[12,3],[5,4],[10,4]] }) },
 
   { id:"treachery", name:"Cīrculus IX — Prōditiō", sub:"BOSS · Lucifer · bygg Vergilius rad", tint:"#16202a",
-    intro:"Vergilius: Lucifer reser sig ur isen. Bygg min rad på golvet — tū nē cēde malīs — i RAD, medan han slungar istappar och en skugga jagar. Vik inte för olyckorna!",
+    intro:"Vergilius: Lucifer reser sig ur isen. Bygg min rad (Aeneiden 6,95) på golvet — tū nē cēde malīs — i RAD, medan han slungar istappar och en skugga jagar. Vik inte för olyckorna!",
     drill:{ type:"boss", count:4, lives:4, build:true },
     boss:"Lucifer", icicleEvery:16, shafts:[4,8,11], dirtSprite:"ice-dirt", wallSprite:"ice-wall",
     // regelrätt jordkarta: gräv & bygg satsen; skuggan patrullerar tunneln (rad 5),

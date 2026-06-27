@@ -85,6 +85,7 @@ var DRILL={
   ablative:{ pool:["ā","ō","ā","ō","am","um"],   // minst 3 levererbara (ā/ō) för needed=3
     gen:function(L){ var ns=[{w:"aqua",e:"ā"},{w:"silva",e:"ā"},{w:"via",e:"ā"},{w:"umbra",e:"ā"},{w:"servus",e:"ō"},{w:"dominus",e:"ō"},{w:"templum",e:"ō"}].filter(function(o){return L.indexOf(o.e)>=0;});
       if(!ns.length)return null; var x=pick(ns), p=pick(["in","cum","sine","ē"]), s=x.w.replace(/(us|um|a)$/,"");
+      if(p==="ē" && /^[aeiouāēīōū]/i.test(x.w)) p="ex";   // ex framför vokal (ex aquā, ē templō)
       return {tip:p+" "+x.w+" → ablativ", goal:x.e, full:p+" "+s+x.e}; } },
   verbpres:{ pool:["ō","ās","at","āmus","ātis","ant"],
     gen:function(L){ var per=[["jag","ō"],["du","ās"],["hon/han","at"],["vi","āmus"],["ni","ātis"],["de","ant"]].filter(function(p){return L.indexOf(p[1])>=0;});
@@ -105,7 +106,7 @@ var DRILL={
       return {tip:v+" → "+t[0]+" (han)", goal:t[1], full:s+t[1]}; } },
   order:{ word:true, build:true, seq:["poēta","puellam","amat"], distract:["Amor","est"],
     gen:function(){ return null; } },          // BYGG-läge: bygg satsen i ordning
-  boss:{ word:true, build:true, seq:["tū","nē","cēde","malīs"], distract:["sed","ferō"],
+  boss:{ word:true, build:true, seq:["tū","nē","cēde","malīs"], distract:["nōn","ferō"],
     gen:function(){ return null; } }
 };
 function isImplemented(ty){ return !!DRILL[ty]; }
@@ -364,15 +365,22 @@ function shapeRune(X,Y){ ctx.save(); ctx.translate(X+TS/2,Y+TS/2); ctx.rotate(Ma
   ctx.fillStyle=C.runeCore; ctx.fillRect(-s*0.6,-s*0.6,1.2*s,1.2*s); ctx.restore();
   ctx.strokeStyle="rgba(240,214,138,.5)"; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(X+TS/2,Y+TS/2,TS/2-3,0,7); ctx.stroke(); }
 function drawEnding(X,Y,label){ if(!label) return; var txt=(""+label).replace(/^-/,"");
-  var mac=/[āēīōū]/.test(txt); var base=txt.replace(/ā/g,"a").replace(/ē/g,"e").replace(/ī/g,"i").replace(/ō/g,"o").replace(/ū/g,"u");
+  // bygg ASCII-bas + notera vilka teckenpositioner som är LÅNGA vokaler (för korrekt vinculum)
+  var MAC={"ā":"a","ē":"e","ī":"i","ō":"o","ū":"u"}, base="", longIdx=[];
+  txt.split("").forEach(function(ch){ if(MAC[ch]){ longIdx.push(base.length); base+=MAC[ch]; } else base+=ch; });
   var cx=X+TS/2, cy=Y+TS/2+2;
   var fs=25; ctx.font="bold "+fs+"px Georgia"; ctx.textAlign="center"; ctx.textBaseline="middle";
   while(ctx.measureText(base).width>TS-7 && fs>9){ fs-=1; ctx.font="bold "+fs+"px Georgia"; }   // krymp för ord
   ctx.lineWidth=4; ctx.strokeStyle="rgba(255,246,214,.92)"; ctx.strokeText(base,cx,cy);
   ctx.fillStyle="#1a1206"; ctx.fillText(base,cx,cy);
-  if(mac){ var w=ctx.measureText(base).width, by=cy-Math.round(fs*0.62);
-    ctx.lineWidth=4; ctx.strokeStyle="rgba(255,246,214,.92)"; ctx.beginPath(); ctx.moveTo(cx-w/2,by); ctx.lineTo(cx+w/2,by); ctx.stroke();
-    ctx.lineWidth=2.5; ctx.strokeStyle="#1a1206"; ctx.beginPath(); ctx.moveTo(cx-w/2,by); ctx.lineTo(cx+w/2,by); ctx.stroke(); } }
+  // macron-streck ENBART över de faktiskt långa vokalerna (inte hela ändelsen)
+  if(longIdx.length){ var w=ctx.measureText(base).width, startX=cx-w/2, by=cy-Math.round(fs*0.62);
+    longIdx.forEach(function(ix){
+      var pre=ctx.measureText(base.slice(0,ix)).width, cw=ctx.measureText(base.charAt(ix)).width;
+      var x0=startX+pre+cw*0.12, x1=startX+pre+cw*0.88;
+      ctx.lineWidth=4; ctx.strokeStyle="rgba(255,246,214,.92)"; ctx.beginPath(); ctx.moveTo(x0,by); ctx.lineTo(x1,by); ctx.stroke();
+      ctx.lineWidth=2.5; ctx.strokeStyle="#1a1206"; ctx.beginPath(); ctx.moveTo(x0,by); ctx.lineTo(x1,by); ctx.stroke();
+    }); } }
 function shapeAltar(X,Y){ ctx.strokeStyle=C.altar; ctx.lineWidth=3; ctx.strokeRect(X+6,Y+6,TS-12,TS-12);
   ctx.fillStyle="rgba(185,137,47,.22)"; ctx.fillRect(X+6,Y+6,TS-12,TS-12);
   ctx.fillStyle=C.altar; ctx.font="bold 22px Georgia"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("◊",X+TS/2,Y+TS/2); }
