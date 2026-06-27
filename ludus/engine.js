@@ -14,6 +14,7 @@ var canvas, ctx, level, grid, W, H, px, py, levelIdx=0;
 var labels={}, task=null, progress=0, needed=3, streak=0, cleared=false, settling=false, origGem=[];
 var vitae=3, wmoves=0, facing=1;
 var falling={}, tickTimer=null, wtick=0, dead=false;
+var buildSlots=[], built=[], builtWord={};
 
 /* ---------- sprites ---------- */
 var SPRITE_FILES=["dirt","wall","boulder","rune","altar","water","gate-closed","gate-open","dante"];
@@ -42,12 +43,15 @@ function loadLevel(i){
   labels={}; progress=0; streak=0; cleared=false; task=null; origGem=[];
   vitae=(level.drill&&level.drill.lives)||3; wmoves=0; facing=1;
   needed=(level.drill&&level.drill.count)||3;
+  buildSlots=[]; built=[]; builtWord={};
   for(var y=0;y<H;y++) for(var x=0;x<W;x++){
     var ch=grid[y][x];
     if(ch==="O") grid[y][x]="r"; else if(ch==="S") grid[y][x]="A";   // alias gamla platshållarnivåer
     if(grid[y][x]==="@"){ px=x; py=y; grid[y][x]=" "; }
     if(grid[y][x]==="*") origGem.push([x,y]);
+    if(grid[y][x]==="B") buildSlots.push([x,y]);
   }
+  buildSlots.sort(function(a,b){ return (a[1]-b[1])||(a[0]-b[0]); });   // ordning: rad, sedan kolumn
   canvas.width=W*TS; canvas.height=H*TS;
   document.body.style.setProperty("--tint",level.tint);
   el("ludus-title").textContent=level.name;
@@ -96,14 +100,10 @@ var DRILL={
     gen:function(L){ var ts=[["presens","at"],["imperfekt","ābat"],["perfekt","āvit"]].filter(function(t){return L.indexOf(t[1])>=0;});
       if(!ts.length)return null; var v=pick(["cantāre","amāre","servāre","mōnstrāre"]), t=pick(ts), s=v.replace(/āre$/,"");
       return {tip:v+" → "+t[0]+" (han)", goal:t[1], full:s+t[1]}; } },
-  order:{ word:true, pool:["poēta","puellam","amat","Amor"],
-    gen:function(L){ var r=[["subjektet (vem?)","poēta"],["objektet (-m)","puellam"],["verbet","amat"]].filter(function(x){return L.indexOf(x[1])>=0;});
-      if(!r.length)return null; var p=pick(r);
-      return {tip:"'poēta puellam amat' — "+p[0]+"?", goal:p[1], full:p[1]}; } },
-  boss:{ word:true, pool:["tū","cēde","malīs","sed"],
-    gen:function(L){ var q=[["du","tū"],["vik (inte)","cēde"],["för olyckorna","malīs"]].filter(function(x){return L.indexOf(x[1])>=0;});
-      if(!q.length)return null; var p=pick(q);
-      return {tip:"Aen. 6,95 — ordet för '"+p[0]+"'?", goal:p[1], full:p[1]}; } }
+  order:{ word:true, build:true, seq:["poēta","puellam","amat"], distract:["Amor","est"],
+    gen:function(){ return null; } },          // BYGG-läge: bygg satsen i ordning
+  boss:{ word:true, build:true, seq:["tū","nē","cēde","malīs"], distract:["sed","ferō"],
+    gen:function(){ return null; } }
 };
 function isImplemented(ty){ return !!DRILL[ty]; }
 function isWordDrill(){ return level.drill && DRILL[level.drill.type] && DRILL[level.drill.type].word; }
@@ -112,28 +112,51 @@ function drillTargets(d){   // vilka tokens kan gen faktiskt be om? (probning)
 }
 function assignGemEndings(){
   if(!level.drill||!isImplemented(level.drill.type)) return;
-  var d=DRILL[level.drill.type], tg=drillTargets(d), pool=d.pool, n=origGem.length, list=[];
-  for(var i=0;i<Math.min(n,needed+1) && tg.length;i++) list.push(tg[i%tg.length]); // garantera ≥needed levererbara
-  while(list.length<n) list.push(pool[list.length%pool.length]);                    // fyll med pool (distraktorer/variation)
+  var d=DRILL[level.drill.type], n=origGem.length, list=[];
+  if(d.build){ list=d.seq.slice(); var dd=d.distract||[], di=0;     // varje satsord finns + distraktorer
+    while(list.length<n){ list.push(dd.length?dd[di%dd.length]:d.seq[di%d.seq.length]); di++; } }
+  else { var tg=drillTargets(d), pool=d.pool;
+    for(var i=0;i<Math.min(n,needed+1)&&tg.length;i++) list.push(tg[i%tg.length]);
+    while(list.length<n) list.push(pool[list.length%pool.length]); }
   list=shuffle(list); var pos=shuffle(origGem.slice()); labels={};
   pos.forEach(function(p,i){ labels[k(p[0],p[1])]=list[i]; });   // token utan bindestreck
 }
 function livingEndings(){ var set={}; for(var y=0;y<H;y++)for(var x=0;x<W;x++) if(grid[y][x]==="*"){ var e=labels[k(x,y)]; if(e) set[e]=1; } return Object.keys(set); }
 function genTask(d, living){ if(!d||!DRILL[d.type]) return null; return DRILL[d.type].gen(living); }
+function bestBuildRun(){   // längsta rad av runor som matchar satsens början (var som helst)
+  if(!task||!task.build) return 0; var seq=task.seq, best=0;
+  for(var y=0;y<H;y++) for(var x=0;x<W;x++){
+    var run=0; while(x+run<W && run<seq.length && grid[y][x+run]==="*" && labels[k(x+run,y)]===seq[run]) run++;
+    if(run>best) best=run;
+  }
+  return best;
+}
+function checkBuild(){ if(cleared||!task||!task.build) return; if(bestBuildRun()===task.seq.length) levelClear(); }
 function nextTask(){
-  if(level.drill && isImplemented(level.drill.type)){
-    task=genTask(level.drill, livingEndings());
+  var d=level.drill;
+  if(d && DRILL[d.type] && DRILL[d.type].build){      // BYGG-läge: lägg orden i RAD i ordning
+    task = { build:true, seq:DRILL[d.type].seq };
+    updateObjective(); return;
+  }
+  if(d && isImplemented(d.type)){
+    task=genTask(d, livingEndings());
     if(!task && progress<needed){ HUD.flash("Inga rätta runor kvar — kammaren börjar om."); setTimeout(function(){ loadLevel(levelIdx); },1000); return; }
   } else task=null;
   updateObjective();
 }
 function updateObjective(){
   var o=el("ludus-task");
-  if(!task){ o.innerHTML="<span class='obj-ph'>"+(level.drill&&level.drill.type==="tutorial"?"Lär dig stigen — gräv dig fram och nå porten ↑":"Denna krets byggs härnäst — gå till porten ↑ för att fortsätta")+"</span>"; return; }
-  var pre=isWordDrill()?"":"-";
-  o.innerHTML="<span class='obj-lead'>Bär runan</span> <span class='obj-end'>"+pre+task.goal+"</span> "+
-    "<span class='obj-lead'>till altaret</span> &nbsp;·&nbsp; <span class='obj-word'>"+task.tip+"</span> "+
-    "&nbsp;·&nbsp; <span class='obj-prog'>✦ "+progress+"/"+needed+"</span>";
+  if(!task){ o.innerHTML="<span class='obj-ph'>"+(level.drill&&level.drill.type==="tutorial"?"Lär dig stigen — gräv dig fram och nå porten ↑":(progress>=needed?"Klart! Gå till porten ↑":"Denna krets byggs härnäst — gå till porten ↑"))+"</span>"; return; }
+  if(task.build){
+    var best=bestBuildRun(), parts="";
+    task.seq.forEach(function(w,i){ parts+=(i<best?"<b class='built'>"+w+"</b>":"<span class='unbuilt'>"+w+"</span>")+" "; });
+    o.innerHTML="<span class='obj-lead'>Lägg ord-runorna i RAD, i denna ordning:</span> <span class='obj-word'>"+parts+"</span> &nbsp;·&nbsp; <span class='obj-prog'>✦ "+best+"/"+task.seq.length+"</span>"; return;
+  }
+  // visa facit bara på intro-kretsar (reveal); annars måste man kunna formen själv
+  var lead = (level.drill&&level.drill.reveal)
+    ? "<span class='obj-lead'>Bär runan</span> <span class='obj-end'>"+(isWordDrill()?"":"-")+task.goal+"</span> <span class='obj-lead'>till altaret</span>"
+    : "<span class='obj-lead'>Bär RÄTT runa till altaret</span>";
+  o.innerHTML=lead+" &nbsp;·&nbsp; <span class='obj-word'>"+task.tip+"</span> &nbsp;·&nbsp; <span class='obj-prog'>✦ "+progress+"/"+needed+"</span>";
 }
 
 /* ---------- fysik (gräv · gravitation · rull · knuff) ---------- */
@@ -152,6 +175,7 @@ function gravityStep(){
     if(pBelow){ if(falling[k(x,y)]&&!settling){ death(); return false; } continue; } // hålls / krossar
     if(below===" "){ fall(x,y,x,y+1); nf[k(x,y+1)]=1; moved=true; }
     else if(below==="A"&&t==="*"&&!settling){ consumeIntoAltar(x,y); moved=true; }
+    else if(below==="B"&&t==="*"&&!settling&&falling[k(x,y)]){ buildPush(x,y,x,y+1); moved=true; }
     else if(below==="r"||below==="*"){ // rulla av rundad yta
       if(inB(x-1,y)&&grid[y][x-1]===" "&&grid[y+1][x-1]===" "&&!(px===x-1&&py===y)){ fall(x,y,x-1,y); nf[k(x-1,y)]=1; moved=true; }
       else if(inB(x+1,y)&&grid[y][x+1]===" "&&grid[y+1][x+1]===" "&&!(px===x+1&&py===y)){ fall(x,y,x+1,y); nf[k(x+1,y)]=1; moved=true; }
@@ -173,6 +197,7 @@ function tick(){
   if(dead) return;
   gravityStep();
   if(level.drill&&level.drill.rising){ wtick++; if(wtick%(level.drill.riseEvery||22)===0) raiseWater(); }
+  if(task&&task.build){ updateObjective(); checkBuild(); }
   render();
 }
 function startTick(){ if(tickTimer) clearInterval(tickTimer); wtick=0; tickTimer=setInterval(tick,110); }
@@ -182,7 +207,26 @@ function tryPush(x,y,dx){
   var b=grid[y][bx];
   if(b===" "){ grid[y][bx]=grid[y][x]; grid[y][x]=" "; moveLabel(x,y,bx,y); px=x; py=y; return true; }
   if(b==="A"){ px=x; py=y; consumeIntoAltar(x,y); return true; }
+  if(b==="B"){ buildPush(x,y,bx,y); return true; }
   return false;
+}
+function buildPush(rx,ry,bx,by){
+  if(!task||!task.build) return;
+  var idx=-1; for(var i=0;i<buildSlots.length;i++) if(buildSlots[i][0]===bx&&buildSlots[i][1]===by){ idx=i; break; }
+  if(idx!==progress){ HUD.flash("Nästa ord ska till byggruta "+(progress+1)+" (vänster→höger)."); return; }
+  var token=labels[k(rx,ry)];
+  if(token===task.goal){
+    grid[ry][rx]=" "; delLabel(rx,ry); px=rx; py=ry;
+    grid[by][bx]="b"; builtWord[k(bx,by)]=token; built.push(token);
+    progress++; streak++; el("ludus-streak").textContent=streak;
+    HUD.flash("✦ "+token+"  ("+progress+"/"+needed+")");
+    if(progress>=needed) levelClear(); else nextTask();
+    updateObjective();
+  } else {
+    streak=0; el("ludus-streak").textContent=streak; vitae--; updateHearts();
+    if(vitae<=0){ HUD.flash("Fel ord. Kammaren börjar om."); setTimeout(function(){ loadLevel(levelIdx); },900); return; }
+    HUD.flash("Fel ord — bygg satsen i ordning. ("+vitae+" liv)");
+  }
 }
 function consumeIntoAltar(x,y){
   var ch=grid[y][x]; var end=(labels[k(x,y)]||"").replace(/^-/,"");
@@ -228,7 +272,15 @@ function drawTile(x,y,t){
   else if(t==="r"){ if(!spr("boulder",X,Y)) shapeBoulder(X,Y); }
   else if(t==="*"){ if(!spr("rune",X,Y)) shapeRune(X,Y); drawEnding(X,Y,labels[k(x,y)]); }
   else if(t==="A"){ glow(X,Y); if(!spr("altar",X,Y)) shapeAltar(X,Y); }
+  else if(t==="B"){ drawBuildSlot(X,Y,false,null); }
+  else if(t==="b"){ drawBuildSlot(X,Y,true,builtWord[k(x,y)]); }
   else if(t==="X"){ if(!spr(cleared?"gate-open":"gate-closed",X,Y)) shapeGate(X,Y,cleared); }
+}
+function drawBuildSlot(X,Y,filled,word){
+  ctx.setLineDash(filled?[]:[5,4]); ctx.lineWidth=2;
+  ctx.strokeStyle=filled?"#caa24a":"rgba(185,137,47,.6)"; ctx.strokeRect(X+4,Y+4,TS-8,TS-8); ctx.setLineDash([]);
+  ctx.fillStyle=filled?"rgba(185,137,47,.16)":"rgba(30,22,10,.5)"; ctx.fillRect(X+5,Y+5,TS-10,TS-10);
+  if(filled&&word) drawEnding(X,Y,word);
 }
 function shapeBoulder(X,Y){ ctx.beginPath(); ctx.arc(X+TS/2,Y+TS/2,TS/2-4,0,7); ctx.fillStyle=C.stone; ctx.fill();
   ctx.fillStyle=C.stoneHi; ctx.beginPath(); ctx.arc(X+TS/2-5,Y+TS/2-6,5,0,7); ctx.fill();
@@ -272,11 +324,11 @@ function move(dx,dy){
   var t=grid[ny][nx];
   if(t==="#"){ return; }
   if(t==="."){ grid[ny][nx]=" "; px=nx; py=ny; }       // gräv
-  else if(t===" "){ px=nx; py=ny; }
-  else if(t==="A"){ px=nx; py=ny; }
+  else if(t===" "||t==="A"||t==="B"||t==="b"){ px=nx; py=ny; }
   else if(t==="r"||t==="*"){ if(dy===0) tryPush(nx,ny,dx); }   // knuffa (bara sidled)
   else if(t==="X"){ onExit(); return; }
   else if(t==="~"){ death(); return; }
+  if(task&&task.build){ updateObjective(); checkBuild(); }
   render();                                           // gravitation/vatten sköts av tick-loopen
 }
 function onExit(){
