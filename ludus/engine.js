@@ -15,6 +15,7 @@ var labels={}, task=null, progress=0, needed=3, streak=0, cleared=false, settlin
 var vitae=3, wmoves=0, facing=1;
 var falling={}, tickTimer=null, wtick=0, dead=false;
 var buildSlots=[], built=[], builtWord={};
+var hover=null, hintOn=true;
 
 /* ---------- sprites ---------- */
 var SPRITE_FILES=["dirt","wall","boulder","rune","altar","water","gate-closed","gate-open","dante"];
@@ -257,6 +258,21 @@ function render(){
   for(var y=0;y<H;y++) for(var x=0;x<W;x++) drawTile(x,y,grid[y][x]);
   drawPlayer(px,py);
   drawLantern();
+  drawHint();
+}
+function correctHover(){   // är runan man hovrar över den rätta?
+  if(!hover||!task||!inB(hover[0],hover[1])) return false;
+  if(grid[hover[1]][hover[0]]!=="*") return false;
+  var tok=labels[k(hover[0],hover[1])];
+  if(task.build){ var nx=bestBuildRun(); return nx<task.seq.length && tok===task.seq[nx]; }
+  return tok===task.goal;
+}
+function drawHint(){
+  if(!hintOn || !correctHover()) return;
+  var X=hover[0]*TS, Y=hover[1]*TS, t=(Date.now()%1100)/1100, a=0.22+0.42*(0.5+0.5*Math.sin(t*Math.PI*2));
+  ctx.save(); ctx.strokeStyle="rgba(255,226,150,"+a.toFixed(2)+")"; ctx.lineWidth=3;
+  ctx.shadowColor="rgba(255,210,120,"+a.toFixed(2)+")"; ctx.shadowBlur=12;
+  ctx.beginPath(); ctx.arc(X+TS/2,Y+TS/2,TS/2-3,0,7); ctx.stroke(); ctx.restore();
 }
 function spr(name,X,Y){ if(IMG[name]){ ctx.drawImage(IMG[name],X,Y,TS,TS); return true; } return false; }
 function drawTile(x,y,t){
@@ -363,6 +379,12 @@ function init(){
     else if(c==="ArrowRight"||c==="d"){ move(1,0); e.preventDefault(); } });
   ["up","down","left","right"].forEach(function(dir){ var b=el("dpad-"+dir); if(!b) return;
     var d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[dir]; b.addEventListener("click",function(){ move(d[0],d[1]); }); });
+  // hover-ledtråd: rätt runa pulserar
+  canvas.addEventListener("mousemove",function(e){ var r=canvas.getBoundingClientRect();
+    var hx=Math.floor((e.clientX-r.left)*(canvas.width/r.width)/TS), hy=Math.floor((e.clientY-r.top)*(canvas.height/r.height)/TS);
+    if(inB(hx,hy)){ if(!hover||hover[0]!==hx||hover[1]!==hy){ hover=[hx,hy]; render(); } } else if(hover){ hover=null; render(); } });
+  canvas.addEventListener("mouseleave",function(){ if(hover){ hover=null; render(); } });
+  var ht=el("hint-toggle"); if(ht) ht.onclick=function(){ hintOn=!hintOn; ht.textContent="Ledtråd: "+(hintOn?"på":"av"); ht.classList.toggle("off",!hintOn); render(); };
   var sx,sy; canvas.addEventListener("touchstart",function(e){ var t=e.touches[0]; sx=t.clientX; sy=t.clientY; },{passive:true});
   canvas.addEventListener("touchend",function(e){ var t=e.changedTouches[0]; var dx=t.clientX-sx, dy=t.clientY-sy;
     if(Math.abs(dx)<20&&Math.abs(dy)<20) return; if(Math.abs(dx)>Math.abs(dy)) move(dx>0?1:-1,0); else move(0,dy>0?1:-1); },{passive:true});
