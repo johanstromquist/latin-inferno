@@ -75,7 +75,7 @@ var DRILL={
       var opt=[]; ns.forEach(function(o){ cl.forEach(function(c){ var e=c[1](o); if(L.indexOf(e)>=0) opt.push({o:o,c:c[0],e:e}); }); });
       if(!opt.length)return null; var p=pick(opt), s=p.o.w.replace(/(us|um)$/,"");
       return {tip:p.o.w+" ("+(p.o.g)+".) → "+p.c, goal:p.e, full:s+p.e}; } },
-  ablative:{ pool:["ā","ō","am","um","ae","īs"],
+  ablative:{ pool:["ā","ō","ā","ō","am","um"],   // minst 3 levererbara (ā/ō) för needed=3
     gen:function(L){ var ns=[{w:"aqua",e:"ā"},{w:"silva",e:"ā"},{w:"via",e:"ā"},{w:"umbra",e:"ā"},{w:"servus",e:"ō"},{w:"dominus",e:"ō"},{w:"templum",e:"ō"}].filter(function(o){return L.indexOf(o.e)>=0;});
       if(!ns.length)return null; var x=pick(ns), p=pick(["in","cum","sine","ē"]), s=x.w.replace(/(us|um|a)$/,"");
       return {tip:p+" "+x.w+" → ablativ", goal:x.e, full:p+" "+s+x.e}; } },
@@ -107,10 +107,14 @@ var DRILL={
 };
 function isImplemented(ty){ return !!DRILL[ty]; }
 function isWordDrill(){ return level.drill && DRILL[level.drill.type] && DRILL[level.drill.type].word; }
+function drillTargets(d){   // vilka tokens kan gen faktiskt be om? (probning)
+  var set={}; for(var i=0;i<60;i++){ var t=d.gen(d.pool.slice()); if(t) set[t.goal]=1; } return Object.keys(set);
+}
 function assignGemEndings(){
   if(!level.drill||!isImplemented(level.drill.type)) return;
-  var pool=DRILL[level.drill.type].pool, n=origGem.length, list=[];
-  for(var i=0;i<n;i++) list.push(pool[i%pool.length]);   // täcker poolen + cyklar
+  var d=DRILL[level.drill.type], tg=drillTargets(d), pool=d.pool, n=origGem.length, list=[];
+  for(var i=0;i<Math.min(n,needed+1) && tg.length;i++) list.push(tg[i%tg.length]); // garantera ≥needed levererbara
+  while(list.length<n) list.push(pool[list.length%pool.length]);                    // fyll med pool (distraktorer/variation)
   list=shuffle(list); var pos=shuffle(origGem.slice()); labels={};
   pos.forEach(function(p,i){ labels[k(p[0],p[1])]=list[i]; });   // token utan bindestreck
 }
@@ -158,6 +162,9 @@ function gravityStep(){
 function settle(){ settling=true; var g=0; while(gravityStep()&&g++<500){} settling=false; falling={}; }
 function raiseWater(){
   var top=-1; for(var y=0;y<H&&top<0;y++) for(var x=0;x<W;x++){ if(grid[y][x]==="~"){ top=y; break; } }
+  if(top<0){ var b=H-2, seeded=false;                          // ingen flod än → så in den längst ner (extra frist)
+    for(var x0=1;x0<W-1;x0++){ var c0=grid[b][x0]; if(c0===" "||c0==="."){ grid[b][x0]="~"; seeded=true; } }
+    if(seeded && grid[py][px]==="~") death(); return; }
   if(top<=1) return; var r=top-1, rose=false;
   for(var x2=0;x2<W;x2++){ var c=grid[r][x2]; if(c===" "||c==="."){ grid[r][x2]="~"; rose=true; } }   // vattnet äter jord
   if(rose && grid[py][px]==="~") death();
