@@ -189,7 +189,8 @@ function gravityStep(){
   }
   falling=nf; return moved;
 }
-function squashEnemy(x,y){ for(var i=0;i<enemies.length;i++) if(enemies[i].x===x&&enemies[i].y===y){ enemies.splice(i,1); HUD.flash("Skuggan krossas!"); return; } }
+function squashEnemy(x,y){ for(var i=0;i<enemies.length;i++) if(enemies[i].x===x&&enemies[i].y===y){ enemies.splice(i,1);
+  HUD.flash((level.enemySprite==="minotaur"?"Minotauren":"Skuggan")+" krossas!"); return; } }
 function bfsStep(sx,sy){   // nästa steg mot spelaren genom öppna gångar (jagar)
   var q=[[sx,sy]], par={}; par[sx+","+sy]=true; var D=[[0,-1],[0,1],[-1,0],[1,0]];
   while(q.length){ var c=q.shift();
