@@ -35,6 +35,7 @@ function inB(x,y){ return x>=0&&y>=0&&x<W&&y<H; }
 /* ---------- ladda nivå ---------- */
 function loadLevel(i){
   levelIdx=i; level=LUDUS_LEVELS[i];
+  try{ localStorage.setItem("ludus_level", i); }catch(e){}   // kom ihåg nivå vid refresh
   grid=level.grid.map(function(r){ return r.split(""); });
   H=grid.length; W=Math.max.apply(null,grid.map(function(r){return r.length;}));
   grid.forEach(function(r){ while(r.length<W) r.push(r[r.length-1]); });
@@ -59,49 +60,74 @@ function loadLevel(i){
   nextTask(); render(); startTick();
 }
 
-/* ---------- latin-generatorer ---------- */
-// Runorna har FASTA ändelser (sätts en gång vid start); de FÖRSVINNER när de
-// levereras och kommer inte tillbaka. Uppgiften väljs bland de ändelser som
-// fortfarande finns kvar i grottan — som att samla rätt diamanter i Boulder Dash.
-function isImplemented(ty){ return ty==="decline1"||ty==="ablative"; }   // övriga drilltyper byggs härnäst
+/* ---------- latin-drillregister ----------
+   Varje runa bär en FAST token (ändelse eller ord), sätts en gång och FÖRSVINNER
+   när den levereras. Uppgiften väljs bland tokens som fortfarande finns i grottan.
+   Varje drill: pool (tokens), word (visa ord utan bindestreck), gen(living)→{tip,goal,full}. */
+var DRILL={
+  decline1:{ pool:["a","am","ae","ā","ō","um","ās","īs"],
+    gen:function(L){ var c=[["nominativ","a"],["ackusativ","am"],["genitiv","ae"],["dativ","ae"],["ablativ","ā"]].filter(function(x){return L.indexOf(x[1])>=0;});
+      if(!c.length)return null; var p=pick(c), n=pick(["rosa","via","puella","terra","aqua","stella","vīta"]), s=n.replace(/[aā]$/,"");
+      return {tip:n+"‑ → "+p[0]+(p[1]==="ae"?" (gen=dat)":""), goal:p[1], full:s+p[1]}; } },
+  decline2:{ pool:["us","um","ī","ō","ōrum","īs"],
+    gen:function(L){ var ns=[{w:"dominus",g:"m"},{w:"servus",g:"m"},{w:"amīcus",g:"m"},{w:"templum",g:"n"},{w:"bellum",g:"n"},{w:"dōnum",g:"n"}];
+      var cl=[["nom.",function(o){return o.g==="m"?"us":"um";}],["ack.",function(o){return "um";}],["gen.",function(){return "ī";}],["dat.",function(){return "ō";}],["abl.",function(){return "ō";}]];
+      var opt=[]; ns.forEach(function(o){ cl.forEach(function(c){ var e=c[1](o); if(L.indexOf(e)>=0) opt.push({o:o,c:c[0],e:e}); }); });
+      if(!opt.length)return null; var p=pick(opt), s=p.o.w.replace(/(us|um)$/,"");
+      return {tip:p.o.w+" ("+(p.o.g)+".) → "+p.c, goal:p.e, full:s+p.e}; } },
+  ablative:{ pool:["ā","ō","am","um","ae","īs"],
+    gen:function(L){ var ns=[{w:"aqua",e:"ā"},{w:"silva",e:"ā"},{w:"via",e:"ā"},{w:"umbra",e:"ā"},{w:"servus",e:"ō"},{w:"dominus",e:"ō"},{w:"templum",e:"ō"}].filter(function(o){return L.indexOf(o.e)>=0;});
+      if(!ns.length)return null; var x=pick(ns), p=pick(["in","cum","sine","ē"]), s=x.w.replace(/(us|um|a)$/,"");
+      return {tip:p+" "+x.w+" → ablativ", goal:x.e, full:p+" "+s+x.e}; } },
+  verbpres:{ pool:["ō","ās","at","āmus","ātis","ant"],
+    gen:function(L){ var per=[["jag","ō"],["du","ās"],["hon/han","at"],["vi","āmus"],["ni","ātis"],["de","ant"]].filter(function(p){return L.indexOf(p[1])>=0;});
+      if(!per.length)return null; var v=pick(["amāre","mōnstrāre","cantāre","servāre"]), p=pick(per), s=v.replace(/āre$/,"");
+      return {tip:v+" → "+p[0]+" (presens)", goal:p[1], full:s+p[1]}; } },
+  casegd:{ pool:["ae","ī","ō","am","um"],
+    gen:function(L){ var ns=[{w:"rēgīna",gen:"ae",dat:"ae",s:"rēgīn"},{w:"poēta",gen:"ae",dat:"ae",s:"poēt"},{w:"dominus",gen:"ī",dat:"ō",s:"domin"},{w:"servus",gen:"ī",dat:"ō",s:"serv"}];
+      var opt=[]; ns.forEach(function(o){ if(L.indexOf(o.gen)>=0)opt.push({o:o,c:"genitiv",e:o.gen}); if(L.indexOf(o.dat)>=0)opt.push({o:o,c:"dativ",e:o.dat}); });
+      if(!opt.length)return null; var p=pick(opt);
+      return {tip:p.o.w+" → "+p.c, goal:p.e, full:p.o.s+p.e}; } },
+  agreement:{ pool:["us","a","um","ae","ō"],
+    gen:function(L){ var ns=[{w:"rēgīna",g:"a"},{w:"domina",g:"a"},{w:"dominus",g:"us"},{w:"servus",g:"us"},{w:"bellum",g:"um"},{w:"templum",g:"um"}].filter(function(o){return L.indexOf(o.g)>=0;});
+      if(!ns.length)return null; var o=pick(ns), gl=o.g==="us"?"m":o.g==="a"?"f":"n";
+      return {tip:o.w+" ("+gl+".) + 'stor' → magn‑?", goal:o.g, full:"magn"+o.g}; } },
+  tense:{ pool:["at","ābat","āvit","ēbat","uit"],
+    gen:function(L){ var ts=[["presens","at"],["imperfekt","ābat"],["perfekt","āvit"]].filter(function(t){return L.indexOf(t[1])>=0;});
+      if(!ts.length)return null; var v=pick(["cantāre","amāre","servāre","mōnstrāre"]), t=pick(ts), s=v.replace(/āre$/,"");
+      return {tip:v+" → "+t[0]+" (han)", goal:t[1], full:s+t[1]}; } },
+  order:{ word:true, pool:["poēta","puellam","amat","Amor"],
+    gen:function(L){ var r=[["subjektet (vem?)","poēta"],["objektet (-m)","puellam"],["verbet","amat"]].filter(function(x){return L.indexOf(x[1])>=0;});
+      if(!r.length)return null; var p=pick(r);
+      return {tip:"'poēta puellam amat' — "+p[0]+"?", goal:p[1], full:p[1]}; } },
+  boss:{ word:true, pool:["tū","cēde","malīs","sed"],
+    gen:function(L){ var q=[["du","tū"],["vik (inte)","cēde"],["för olyckorna","malīs"]].filter(function(x){return L.indexOf(x[1])>=0;});
+      if(!q.length)return null; var p=pick(q);
+      return {tip:"Aen. 6,95 — ordet för '"+p[0]+"'?", goal:p[1], full:p[1]}; } }
+};
+function isImplemented(ty){ return !!DRILL[ty]; }
+function isWordDrill(){ return level.drill && DRILL[level.drill.type] && DRILL[level.drill.type].word; }
 function assignGemEndings(){
   if(!level.drill||!isImplemented(level.drill.type)) return;
-  var reals=level.drill.type==="ablative"?["ā","ō"]:["a","am","ae","ā"];
-  var distract=level.drill.type==="ablative"?["am","um","īs"]:["ō","um","ās","īs"];
-  var n=origGem.length, list=[];
-  for(var i=0;i<Math.min(n,needed+2);i++) list.push(reals[i%reals.length]); // garanterar lösbarhet + tvilling
-  while(list.length<n) list.push(distract[list.length%distract.length]);
+  var pool=DRILL[level.drill.type].pool, n=origGem.length, list=[];
+  for(var i=0;i<n;i++) list.push(pool[i%pool.length]);   // täcker poolen + cyklar
   list=shuffle(list); var pos=shuffle(origGem.slice()); labels={};
-  pos.forEach(function(p,i){ labels[k(p[0],p[1])]="-"+list[i]; });
+  pos.forEach(function(p,i){ labels[k(p[0],p[1])]=list[i]; });   // token utan bindestreck
 }
-function livingEndings(){ var set={}; for(var y=0;y<H;y++)for(var x=0;x<W;x++) if(grid[y][x]==="*"){ var e=(labels[k(x,y)]||"").replace(/^-/,""); if(e) set[e]=1; } return Object.keys(set); }
-function genTask(d, living){
-  if(d&&d.type==="decline1"){
-    var cases=[["nominativ","a"],["ackusativ","am"],["genitiv","ae"],["dativ","ae"],["ablativ","ā"]].filter(function(c){return living.indexOf(c[1])>=0;});
-    if(!cases.length) return null;
-    var c=pick(cases), n=pick(d.pool), st=n.replace(/[aā]$/,"");
-    return { tip:n+"‑ → "+c[0]+(c[1]==="ae"?" (gen=dat)":""), goal:c[1], full:st+c[1] };
-  }
-  if(d&&d.type==="ablative"){
-    var nn=[{w:"aqua",e:"ā"},{w:"silva",e:"ā"},{w:"via",e:"ā"},{w:"umbra",e:"ā"},
-            {w:"servus",e:"ō"},{w:"dominus",e:"ō"},{w:"templum",e:"ō"}].filter(function(o){return living.indexOf(o.e)>=0;});
-    if(!nn.length) return null;
-    var x=pick(nn), p=pick(["in","cum","sine","ē"]), s=x.w.replace(/(us|um|a)$/,"");
-    return { tip:p+" "+x.w+" → ablativ", goal:x.e, full:p+" "+s+x.e };
-  }
-  return null;
-}
+function livingEndings(){ var set={}; for(var y=0;y<H;y++)for(var x=0;x<W;x++) if(grid[y][x]==="*"){ var e=labels[k(x,y)]; if(e) set[e]=1; } return Object.keys(set); }
+function genTask(d, living){ if(!d||!DRILL[d.type]) return null; return DRILL[d.type].gen(living); }
 function nextTask(){
   if(level.drill && isImplemented(level.drill.type)){
     task=genTask(level.drill, livingEndings());
     if(!task && progress<needed){ HUD.flash("Inga rätta runor kvar — kammaren börjar om."); setTimeout(function(){ loadLevel(levelIdx); },1000); return; }
-  } else task=null;   // tutorial + ej-byggda kretsar: ingen drill, ingen omstart
+  } else task=null;
   updateObjective();
 }
 function updateObjective(){
   var o=el("ludus-task");
   if(!task){ o.innerHTML="<span class='obj-ph'>"+(level.drill&&level.drill.type==="tutorial"?"Lär dig stigen — gräv dig fram och nå porten ↑":"Denna krets byggs härnäst — gå till porten ↑ för att fortsätta")+"</span>"; return; }
-  o.innerHTML="<span class='obj-lead'>Bär runan</span> <span class='obj-end'>-"+task.goal+"</span> "+
+  var pre=isWordDrill()?"":"-";
+  o.innerHTML="<span class='obj-lead'>Bär runan</span> <span class='obj-end'>"+pre+task.goal+"</span> "+
     "<span class='obj-lead'>till altaret</span> &nbsp;·&nbsp; <span class='obj-word'>"+task.tip+"</span> "+
     "&nbsp;·&nbsp; <span class='obj-prog'>✦ "+progress+"/"+needed+"</span>";
 }
@@ -207,12 +233,13 @@ function shapeRune(X,Y){ ctx.save(); ctx.translate(X+TS/2,Y+TS/2); ctx.rotate(Ma
 function drawEnding(X,Y,label){ if(!label) return; var txt=(""+label).replace(/^-/,"");
   var mac=/[āēīōū]/.test(txt); var base=txt.replace(/ā/g,"a").replace(/ē/g,"e").replace(/ī/g,"i").replace(/ō/g,"o").replace(/ū/g,"u");
   var cx=X+TS/2, cy=Y+TS/2+2;
-  ctx.font="bold 25px Georgia"; ctx.textAlign="center"; ctx.textBaseline="middle";
-  ctx.lineWidth=4; ctx.strokeStyle="rgba(255,246,214,.92)"; ctx.strokeText(base,cx,cy);  // ljus halo = läsbar
+  var fs=25; ctx.font="bold "+fs+"px Georgia"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  while(ctx.measureText(base).width>TS-7 && fs>9){ fs-=1; ctx.font="bold "+fs+"px Georgia"; }   // krymp för ord
+  ctx.lineWidth=4; ctx.strokeStyle="rgba(255,246,214,.92)"; ctx.strokeText(base,cx,cy);
   ctx.fillStyle="#1a1206"; ctx.fillText(base,cx,cy);
-  if(mac){ var w=ctx.measureText(base).width, by=cy-16;                                  // tydlig makron-stapel
-    ctx.lineWidth=5; ctx.strokeStyle="rgba(255,246,214,.92)"; ctx.beginPath(); ctx.moveTo(cx-w/2,by); ctx.lineTo(cx+w/2,by); ctx.stroke();
-    ctx.lineWidth=3; ctx.strokeStyle="#1a1206"; ctx.beginPath(); ctx.moveTo(cx-w/2,by); ctx.lineTo(cx+w/2,by); ctx.stroke(); } }
+  if(mac){ var w=ctx.measureText(base).width, by=cy-Math.round(fs*0.62);
+    ctx.lineWidth=4; ctx.strokeStyle="rgba(255,246,214,.92)"; ctx.beginPath(); ctx.moveTo(cx-w/2,by); ctx.lineTo(cx+w/2,by); ctx.stroke();
+    ctx.lineWidth=2.5; ctx.strokeStyle="#1a1206"; ctx.beginPath(); ctx.moveTo(cx-w/2,by); ctx.lineTo(cx+w/2,by); ctx.stroke(); } }
 function shapeAltar(X,Y){ ctx.strokeStyle=C.altar; ctx.lineWidth=3; ctx.strokeRect(X+6,Y+6,TS-12,TS-12);
   ctx.fillStyle="rgba(185,137,47,.22)"; ctx.fillRect(X+6,Y+6,TS-12,TS-12);
   ctx.fillStyle=C.altar; ctx.font="bold 22px Georgia"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("◊",X+TS/2,Y+TS/2); }
@@ -280,7 +307,8 @@ function init(){
   var sx,sy; canvas.addEventListener("touchstart",function(e){ var t=e.touches[0]; sx=t.clientX; sy=t.clientY; },{passive:true});
   canvas.addEventListener("touchend",function(e){ var t=e.changedTouches[0]; var dx=t.clientX-sx, dy=t.clientY-sy;
     if(Math.abs(dx)<20&&Math.abs(dy)<20) return; if(Math.abs(dx)>Math.abs(dy)) move(dx>0?1:-1,0); else move(0,dy>0?1:-1); },{passive:true});
-  loadLevel(2);
+  var start=2; try{ var s=parseInt(localStorage.getItem("ludus_level"),10); if(s>=0&&s<LUDUS_LEVELS.length) start=s; }catch(e){}
+  loadLevel(start);   // återuppta senaste nivå vid refresh
 }
 window.addEventListener("DOMContentLoaded",init);
 window.LUDUS={ state:function(){ return {task:task,labels:labels,px:px,py:py,progress:progress,needed:needed,streak:streak,vitae:vitae,cleared:cleared,grid:grid.map(function(r){return r.join("");})}; },

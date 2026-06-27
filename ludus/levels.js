@@ -1,18 +1,29 @@
 /* ============================================================================
-   SAXA CADENTIA — nivådata (Steg 2: visuella nivåer, platshållarmekanik)
-   Tecken i grid:
-     #=mur  .=grus(gräv)  (mellanslag)=luft  @=spelarstart  X=utgång
-     O=lös sten (faller)  S=altarslott (leverera hit)  E=fiende  ~=vatten
-     *=fragmentsten (bär en latinsk ändelse; etiketter sätts av drill-poolen)
-   drill: vilken paradigm kammaren övar (formgenerator i engine, Steg 4).
+   SAXA CADENTIA — nivådata
+   Tecken: #=vägg  .=jord(gräv)  (blank)=tomt  @=start  X=port
+           r=sten(faller/rullar)  *=runa(diamant)  A=altare(lämna runa)  ~=vatten
+   Standardgrotta = jordfylld med tre runa+altare-par per rad (gräv → knuffa rätt
+   runa in i altaret bredvid). Varje krets har en egen latin-drill (engine DRILL).
    ========================================================================== */
+
+// jordfylld standardgrotta med 6 runa+altare-par
+var CAVE=[
+  "################",
+  "#@............X#",
+  "#..............#",
+  "#.*A..*A..*A...#",
+  "#..............#",
+  "#.*A..*A..*A...#",
+  "#..............#",
+  "#..............#",
+  "################"
+];
 
 const LUDUS_LEVELS = [
 
   { id:"selva", name:"Silva Obscura", sub:"Tutorial — gräv, knuffa, nå porten", tint:"#2a2113",
-    intro:"Vergilius: Lär dig stigen. Pilarna (eller svep) gräver genom jorden. Knuffa en sten i sidled. Lyktan lyser vägen. Gräv fram till porten ↑.",
+    intro:"Vergilius: Lär dig stigen. Pilarna (eller svep) gräver genom jorden. Knuffa stenen i sidled. Gräv fram till porten ↑.",
     drill:{ type:"tutorial" },
-    // jordfylld grotta: gräv tunnlar genom jorden, knuffa stenen, nå porten
     grid:[
       "################",
       "#@..........X..#",
@@ -21,90 +32,31 @@ const LUDUS_LEVELS = [
       "#..............#",
       "#..............#",
       "################"
-    ]
-  },
+    ] },
 
-  { id:"porta", name:"Porta Īnferī", sub:"Subjekt + verb", tint:"#241a12",
-    intro:"Vergilius: Leverera verbet till subjektet — bilda en mening.",
-    drill:{ type:"sentence", count:3 },
-    grid:[
-      "################",
-      "#@....O....*...#",
-      "#..####..####..#",
-      "#..............#",
-      "#..*...O....O..#",
-      "#..####..####..#",
-      "#.........S...X#",
-      "################"
-    ]
-  },
+  { id:"porta", name:"Porta Īnferī", sub:"Verb · presens · personändelser", tint:"#241a12",
+    intro:"Vergilius: Porten lyder den som böjer verbet rätt. Bär runan med rätt personändelse till altaret.",
+    drill:{ type:"verbpres", count:3, lives:3 }, grid:CAVE },
 
   { id:"limbo", name:"Cīrculus I — Limbus", sub:"1:a deklinationen · kasus", tint:"#1c2418",
-    intro:"Vergilius: Gräv dig fram. Läs runornas ändelser och knuffa RÄTT runa in i altaret (◊) bredvid den. Bilda tre former.",
-    drill:{ type:"decline1", pool:["rosa","via","puella","terra","aqua","stella","vīta"], count:3 },
-    // jordfylld grotta; tre runa+altare-par (*◊). Gräv till rätt runa, knuffa den ett steg in i altaret.
-    grid:[
-      "################",
-      "#@............X#",
-      "#..............#",
-      "#.*A..*A..*A...#",
-      "#..............#",
-      "#.*A..*A..*A...#",
-      "#..............#",
-      "#..............#",
-      "################"
-    ]
-  },
+    intro:"Vergilius: Gräv fram, läs runornas ändelser och knuffa RÄTT runa in i altaret (◊) bredvid den. Bilda tre former.",
+    drill:{ type:"decline1", count:3, lives:3 }, grid:CAVE },
 
-  { id:"lust", name:"Cīrculus II — Luxuria", sub:"2:a dekl. + genus · VIND", tint:"#1d1822",
-    intro:"Vergilius: Stormen knuffar stenarna. Tajma leveransen; akta neutrum.",
-    drill:{ type:"decline2", pool:["dominus","servus","amīcus","templum","bellum","dōnum"], count:5 },
-    grid:[
-      "################",
-      "#@..*...*...*..#",
-      "#..............#",
-      "#.O..O..O..O..O#",
-      "#..............#",
-      "#..*....*...*..#",
-      "#.....S......X.#",
-      "################"
-    ]
-  },
+  { id:"lust", name:"Cīrculus II — Luxuria", sub:"2:a deklinationen · genus", tint:"#1d1822",
+    intro:"Vergilius: -us eller -um? Akta neutrum. Bär rätt 2:a-deklinationsändelse till altaret.",
+    drill:{ type:"decline2", count:3, lives:3 }, grid:CAVE },
 
-  { id:"glutt", name:"Cīrculus III — Gula", sub:"Verb presens · CERBERUS (3 mål)", tint:"#161c20",
-    intro:"Vergilius: Cerberus tre strupar kräver var sin personform. Mata alla tre innan han lungar.",
-    drill:{ type:"verbpres", pool:["amāre","mōnstrāre","cantāre","servāre"], count:3 },
-    grid:[
-      "################",
-      "#@..*..*..*..*.#",
-      "#.####.##.####.#",
-      "#...O......O...#",
-      "#S####.##.####S#",
-      "#......S.......#",
-      "#..E....E....E.#",
-      "#............#X#",
-      "################"
-    ]
-  },
+  { id:"glutt", name:"Cīrculus III — Gula", sub:"Verb · presens (Cerberus)", tint:"#161c20",
+    intro:"Vergilius: Cerberus tystas av rätt personform. Bär runan med rätt ändelse till altaret.",
+    drill:{ type:"verbpres", count:3, lives:3 }, grid:CAVE },
 
-  { id:"greed", name:"Cīrculus IV — Avāritia", sub:"Genitiv & dativ · TUNG STEN", tint:"#241d14",
-    intro:"Vergilius: Här är stenen hopad och tung. Röj väg utan att krossas.",
-    drill:{ type:"casegd", pool:["rēgīna","poēta","domina"], count:6 },
-    grid:[
-      "################",
-      "#@OOO.*.OOO.*..#",
-      "#.OO.....OO....#",
-      "#..*.OOO..*.OO.#",
-      "#.OO..*..OO....#",
-      "#.....S......X.#",
-      "################"
-    ]
-  },
+  { id:"greed", name:"Cīrculus IV — Avāritia", sub:"Kasus · genitiv & dativ", tint:"#241d14",
+    intro:"Vergilius: Vem äger, vem får? Bär rätt genitiv- eller dativändelse till altaret.",
+    drill:{ type:"casegd", count:3, lives:3 }, grid:CAVE },
 
   { id:"wrath", name:"Cīrculus V — Īra", sub:"Prepositioner + ablativ · STIGANDE STYX", tint:"#10171a",
-    intro:"Vergilius: Styx stiger! Gräv fram och knuffa rätt ABLATIV-runa in i ett altare (◊) tre gånger — innan det svarta vattnet sväljer dig. Fel kostar liv.",
+    intro:"Vergilius: Styx stiger! Bär rätt ABLATIV-runa till altaret tre gånger — innan vattnet sväljer dig. Fel kostar liv.",
     drill:{ type:"ablative", count:3, lives:3, rising:true, riseEvery:26 },
-    // jordfylld grotta; tre runa+altare-par; stenar i mellanrummen; vattnet stiger och äter jorden
     grid:[
       "################",
       "#@.....X.......#",
@@ -116,79 +68,27 @@ const LUDUS_LEVELS = [
       "#..............#",
       "#~~~~~~~~~~~~~~#",
       "################"
-    ]
-  },
+    ] },
 
-  { id:"heresy", name:"Cīrculus VI — Haeresis", sub:"Adjektiv + kongruens · 2 slots", tint:"#2a160f",
-    intro:"Vergilius: Leverera substantiv OCH ett adjektiv som kongruerar i genus.",
-    drill:{ type:"agreement", pool:["rēgīna","dominus","bellum"], count:4 },
-    grid:[
-      "################",
-      "#@..*...*...*..#",
-      "#.####.##.###.#",
-      "#....O.....O..#",
-      "#..*....*...*.#",
-      "#.SS.........X#",
-      "################"
-    ]
-  },
+  { id:"heresy", name:"Cīrculus VI — Haeresis", sub:"Adjektiv · kongruens", tint:"#2a160f",
+    intro:"Vergilius: Adjektivet rättar sig efter substantivets genus. Bär 'stor' i rätt form (magn‑?) till altaret.",
+    drill:{ type:"agreement", count:3, lives:3 }, grid:CAVE },
 
-  { id:"violence", name:"Cīrculus VII — Violentia", sub:"Tempus · MINOTAUROS jagar", tint:"#1a140f",
-    intro:"Vergilius: Minotauros patrullerar. Lura honom under en sten. Leverera rätt tempus.",
-    drill:{ type:"tense", pool:["amāre","cantāre","servāre"], count:5 },
-    grid:[
-      "################",
-      "#@..*...*...*..#",
-      "#.####.##.####.#",
-      "#...O.. ..O....#",
-      "#..*..E....*...#",
-      "#.####.##.####.#",
-      "#......S.....X.#",
-      "################"
-    ]
-  },
+  { id:"violence", name:"Cīrculus VII — Violentia", sub:"Tempus · imperfekt & perfekt", tint:"#1a140f",
+    intro:"Vergilius: Pågående eller avslutat? Bär runan med rätt tempusändelse till altaret.",
+    drill:{ type:"tense", count:3, lives:3 }, grid:CAVE },
 
-  { id:"fraud", name:"Cīrculus VIII — Fraus", sub:"Syntax · ORDNINGS-slots", tint:"#231a12",
-    intro:"Vergilius: Lägg ord-stenarna i RÄTT ORDNING i raden av slots. Marken vränger sig.",
-    drill:{ type:"order", count:2 },
-    grid:[
-      "################",
-      "#@..*..*..*..*.#",
-      "#..............#",
-      "#..*..*..*..*..#",
-      "#..............#",
-      "#.SSSSSS......X#",
-      "################"
-    ]
-  },
+  { id:"fraud", name:"Cīrculus VIII — Fraus", sub:"Syntax · satsdelar", tint:"#231a12",
+    intro:"Vergilius: Ändelsen avslöjar rollen. I 'poēta puellam amat' — bär det efterfrågade ordet till altaret.",
+    drill:{ type:"order", count:3, lives:3 }, grid:CAVE },
 
-  { id:"treachery", name:"Cīrculus IX — Prōditiō", sub:"BOSS · SJUNKANDE ISTAK", tint:"#16202a",
-    intro:"Vergilius: Återskapa min rad innan istaket pressar ner. Tū nē cēde malīs…",
-    drill:{ type:"boss", line:["tū","nē","cēde","malīs,","sed","contrā","audentior","ītō"] },
-    grid:[
-      "################",
-      "#@.*.*.*.*.*.*.#",
-      "#..............#",
-      "#.*.*.*.*.*.*..#",
-      "#..............#",
-      "#.SSSSSSSS....X#",
-      "################"
-    ]
-  },
+  { id:"treachery", name:"Cīrculus IX — Prōditiō", sub:"BOSS · Vergilius rad", tint:"#16202a",
+    intro:"Vergilius: Min rad, Aen. 6,95: tū nē cēde malīs. Bär ordet jag ber om till altaret.",
+    drill:{ type:"boss", count:3, lives:3 }, grid:CAVE },
 
-  { id:"stelle", name:"Ad Astra", sub:"Seger · fri träning", tint:"#0e1530",
-    intro:"Vergilius: Du ser stjärnorna igen. Träna fritt, eller vila.",
-    drill:{ type:"free" },
-    grid:[
-      "################",
-      "#@............X#",
-      "#....*....*....#",
-      "#..............#",
-      "#....*....*....#",
-      "#......S.......#",
-      "################"
-    ]
-  }
+  { id:"stelle", name:"Ad Astra", sub:"Fri träning · 1:a deklinationen", tint:"#0e1530",
+    intro:"Vergilius: Du ser stjärnorna. Träna fritt — bär rätt kasusändelse till altaret.",
+    drill:{ type:"decline1", count:3, lives:3 }, grid:CAVE }
 
 ];
 
