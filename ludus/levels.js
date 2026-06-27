@@ -45,11 +45,12 @@ const LUDUS_LEVELS = [
     // jordfylld grotta; tre runa+altare-par (*◊). Gräv till rätt runa, knuffa den ett steg in i altaret.
     grid:[
       "################",
-      "#@...........X.#",
+      "#@............X#",
       "#..............#",
-      "#..*A....*A....#",
+      "#.*A..*A..*A...#",
       "#..............#",
-      "#......*A......#",
+      "#.*A..*A..*A...#",
+      "#..............#",
       "#..............#",
       "################"
     ]
@@ -102,16 +103,15 @@ const LUDUS_LEVELS = [
 
   { id:"wrath", name:"Cīrculus V — Īra", sub:"Prepositioner + ablativ · STIGANDE STYX", tint:"#10171a",
     intro:"Vergilius: Styx stiger! Gräv fram och knuffa rätt ABLATIV-runa in i ett altare (◊) tre gånger — innan det svarta vattnet sväljer dig. Fel kostar liv.",
-    drill:{ type:"ablative", count:3, lives:3, rising:true, riseEvery:12 },
+    drill:{ type:"ablative", count:3, lives:3, rising:true, riseEvery:26 },
     // jordfylld grotta; tre runa+altare-par; stenar i mellanrummen; vattnet stiger och äter jorden
     grid:[
       "################",
       "#@.....X.......#",
       "#..............#",
-      "#.....r....r...#",
+      "#.*A..*A..*A...#",
       "#..............#",
-      "#..*A...*A...*A#",
-      "#..............#",
+      "#.*A..*A..*A...#",
       "#..............#",
       "#..............#",
       "#~~~~~~~~~~~~~~#",

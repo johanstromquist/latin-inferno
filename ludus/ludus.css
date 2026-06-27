@@ -1,6 +1,8 @@
 :root{ --tint:#241d14; --gold:#c8a24a; --gold-br:#e7c878; --ink:#e9ddc2; --ink-dim:#b6a988; --muted:#8a7c63; --line:#3a2f20;
   --serif:"EB Garamond",Georgia,serif; --display:"Cinzel",Georgia,serif; }
 *{box-sizing:border-box}
+/* hindra dubbeltryck-zoom på knappar/spelyta (mobil) */
+button,#ludus-canvas,#dpad,#ludus-stage{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:radial-gradient(120% 80% at 50% -10%,var(--tint),#0a0807 60%) fixed;
   color:var(--ink);font-family:var(--serif);font-size:17px;-webkit-font-smoothing:antialiased}
 #ludus-wrap{max-width:760px;margin:0 auto;padding:0 1rem 4rem}

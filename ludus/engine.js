@@ -13,6 +13,7 @@ var TS=48;
 var canvas, ctx, level, grid, W, H, px, py, levelIdx=0;
 var labels={}, task=null, progress=0, needed=3, streak=0, cleared=false, settling=false, origGem=[];
 var vitae=3, wmoves=0, facing=1;
+var falling={}, tickTimer=null, wtick=0, dead=false;
 
 /* ---------- sprites ---------- */
 var SPRITE_FILES=["dirt","wall","boulder","rune","altar","water","gate-closed","gate-open","dante"];
@@ -53,33 +54,47 @@ function loadLevel(i){
   el("ludus-intro").textContent=level.intro;
   el("ludus-streak").textContent=streak; updateHearts();
   buildLegend();
-  settling=true; applyGravity(); settling=false;
-  nextTask(); render();
+  assignGemEndings();                 // fasta ändelser, sätts en gång
+  dead=false; settle();
+  nextTask(); render(); startTick();
 }
 
 /* ---------- latin-generatorer ---------- */
-function twin(e){ return e==="ā"?"a":e==="a"?"ā":e==="ō"?"o":e==="o"?"ō":null; }
-function nearMiss(ans,pool){ pool=shuffle(pool.filter(function(e){return e!==ans;}));
-  var t=twin(ans); if(t) pool=[t].concat(pool.filter(function(e){return e!==t;})); return pool; }
-function genTask(d){
+// Runorna har FASTA ändelser (sätts en gång vid start); de FÖRSVINNER när de
+// levereras och kommer inte tillbaka. Uppgiften väljs bland de ändelser som
+// fortfarande finns kvar i grottan — som att samla rätt diamanter i Boulder Dash.
+function assignGemEndings(){
+  if(!level.drill||!level.drill.type||level.drill.type==="tutorial") return;
+  var reals=level.drill.type==="ablative"?["ā","ō"]:["a","am","ae","ā"];
+  var distract=level.drill.type==="ablative"?["am","um","īs"]:["ō","um","ās","īs"];
+  var n=origGem.length, list=[];
+  for(var i=0;i<Math.min(n,needed+2);i++) list.push(reals[i%reals.length]); // garanterar lösbarhet + tvilling
+  while(list.length<n) list.push(distract[list.length%distract.length]);
+  list=shuffle(list); var pos=shuffle(origGem.slice()); labels={};
+  pos.forEach(function(p,i){ labels[k(p[0],p[1])]="-"+list[i]; });
+}
+function livingEndings(){ var set={}; for(var y=0;y<H;y++)for(var x=0;x<W;x++) if(grid[y][x]==="*"){ var e=(labels[k(x,y)]||"").replace(/^-/,""); if(e) set[e]=1; } return Object.keys(set); }
+function genTask(d, living){
   if(d&&d.type==="decline1"){
-    var n=pick(d.pool), st=n.replace(/[aā]$/,"");
-    var c=pick([["nominativ","a"],["ackusativ","am"],["genitiv","ae"],["dativ","ae"],["ablativ","ā"]]);
-    return { tip:n+"‑ → "+c[0]+(c[1]==="ae"?" (gen=dat)":""), goal:c[1], full:st+c[1],
-      distr:nearMiss(c[1],["a","am","ae","ā","ās","īs","ārum","um","us","ō"]) };
+    var cases=[["nominativ","a"],["ackusativ","am"],["genitiv","ae"],["dativ","ae"],["ablativ","ā"]].filter(function(c){return living.indexOf(c[1])>=0;});
+    if(!cases.length) return null;
+    var c=pick(cases), n=pick(d.pool), st=n.replace(/[aā]$/,"");
+    return { tip:n+"‑ → "+c[0]+(c[1]==="ae"?" (gen=dat)":""), goal:c[1], full:st+c[1] };
   }
   if(d&&d.type==="ablative"){
     var nn=[{w:"aqua",e:"ā"},{w:"silva",e:"ā"},{w:"via",e:"ā"},{w:"umbra",e:"ā"},
-            {w:"servus",e:"ō"},{w:"dominus",e:"ō"},{w:"templum",e:"ō"}];
+            {w:"servus",e:"ō"},{w:"dominus",e:"ō"},{w:"templum",e:"ō"}].filter(function(o){return living.indexOf(o.e)>=0;});
+    if(!nn.length) return null;
     var x=pick(nn), p=pick(["in","cum","sine","ē"]), s=x.w.replace(/(us|um|a)$/,"");
-    return { tip:p+" "+x.w+" → ablativ", goal:x.e, full:p+" "+s+x.e,
-      distr:nearMiss(x.e,["ā","ō","am","um","ae","īs","ārum"]) };
+    return { tip:p+" "+x.w+" → ablativ", goal:x.e, full:p+" "+s+x.e };
   }
   return null;
 }
 function nextTask(){
-  task=genTask(level.drill);
-  if(task){ regenGems(); labelGems(); }
+  if(level.drill && level.drill.type!=="tutorial"){
+    task=genTask(level.drill, livingEndings());
+    if(!task && progress<needed){ HUD.flash("Inga rätta runor kvar — kammaren börjar om."); setTimeout(function(){ loadLevel(levelIdx); },1000); return; }
+  } else task=null;
   updateObjective();
 }
 function updateObjective(){
@@ -89,37 +104,44 @@ function updateObjective(){
     "<span class='obj-lead'>till altaret</span> &nbsp;·&nbsp; <span class='obj-word'>"+task.tip+"</span> "+
     "&nbsp;·&nbsp; <span class='obj-prog'>✦ "+progress+"/"+needed+"</span>";
 }
-function gemPositions(){ var p=[]; for(var y=0;y<H;y++)for(var x=0;x<W;x++) if(grid[y][x]==="*") p.push([x,y]); return p; }
-function regenGems(){
-  for(var y=0;y<H;y++) for(var x=0;x<W;x++) if(grid[y][x]==="*"){ grid[y][x]=" "; delLabel(x,y); }
-  origGem.forEach(function(p){ grid[p[1]][p[0]]="*"; });
-}
-function labelGems(){
-  if(!task) return; var pos=shuffle(gemPositions()); labels={}; if(!pos.length) return;
-  labels[k(pos[0][0],pos[0][1])]="-"+task.goal;
-  for(var i=1;i<pos.length;i++) labels[k(pos[i][0],pos[i][1])]="-"+task.distr[(i-1)%task.distr.length];
-}
 
 /* ---------- fysik (gräv · gravitation · rull · knuff) ---------- */
 function moveLabel(x,y,nx,ny){ var kk=k(x,y); if(labels[kk]!==undefined){ labels[k(nx,ny)]=labels[kk]; delete labels[kk]; } }
 function delLabel(x,y){ delete labels[k(x,y)]; }
 function fall(x,y,nx,ny){ grid[ny][nx]=grid[y][x]; grid[y][x]=" "; moveLabel(x,y,nx,ny); }
 
-function applyGravity(){
-  var moved=true, guard=0;
-  while(moved && guard<500){ moved=false; guard++;
-    for(var y=H-2;y>=0;y--) for(var x=0;x<W;x++){
-      var t=grid[y][x]; if(t!=="r"&&t!=="*") continue;
-      var bz=grid[y+1][x];
-      if(bz===" "){ if(!settling&&px===x&&py===y+1){ death(); return; } fall(x,y,x,y+1); moved=true; }
-      else if(bz==="A"&&t==="*"&&!settling){ consumeIntoAltar(x,y); moved=true; }
-      else if(bz==="r"||bz==="*"||bz==="#"){ // rulla av rundade ytor
-        if(inB(x-1,y)&&grid[y][x-1]===" "&&grid[y+1][x-1]===" "){ fall(x,y,x-1,y); moved=true; }
-        else if(inB(x+1,y)&&grid[y][x+1]===" "&&grid[y+1][x+1]===" "){ fall(x,y,x+1,y); moved=true; }
-      }
+// ETT gravitationssteg (en ruta per tick). En FALLANDE sten (i rörelse) krossar
+// spelaren; en VILANDE sten på spelarens huvud hålls och krossar inte — kliv undan
+// så faller den bakom dig. Rocks/gems rullar av andra rocks/gems (rundade ytor).
+function gravityStep(){
+  var nf={}, moved=false;
+  for(var y=H-2;y>=0;y--) for(var x=0;x<W;x++){
+    var t=grid[y][x]; if(t!=="r"&&t!=="*") continue;
+    var below=grid[y+1][x], pBelow=(px===x&&py===y+1);
+    if(pBelow){ if(falling[k(x,y)]&&!settling){ death(); return false; } continue; } // hålls / krossar
+    if(below===" "){ fall(x,y,x,y+1); nf[k(x,y+1)]=1; moved=true; }
+    else if(below==="A"&&t==="*"&&!settling){ consumeIntoAltar(x,y); moved=true; }
+    else if(below==="r"||below==="*"){ // rulla av rundad yta
+      if(inB(x-1,y)&&grid[y][x-1]===" "&&grid[y+1][x-1]===" "&&!(px===x-1&&py===y)){ fall(x,y,x-1,y); nf[k(x-1,y)]=1; moved=true; }
+      else if(inB(x+1,y)&&grid[y][x+1]===" "&&grid[y+1][x+1]===" "&&!(px===x+1&&py===y)){ fall(x,y,x+1,y); nf[k(x+1,y)]=1; moved=true; }
     }
   }
+  falling=nf; return moved;
 }
+function settle(){ settling=true; var g=0; while(gravityStep()&&g++<500){} settling=false; falling={}; }
+function raiseWater(){
+  var top=-1; for(var y=0;y<H&&top<0;y++) for(var x=0;x<W;x++){ if(grid[y][x]==="~"){ top=y; break; } }
+  if(top<=1) return; var r=top-1, rose=false;
+  for(var x2=0;x2<W;x2++){ var c=grid[r][x2]; if(c===" "||c==="."){ grid[r][x2]="~"; rose=true; } }   // vattnet äter jord
+  if(rose && grid[py][px]==="~") death();
+}
+function tick(){
+  if(dead) return;
+  gravityStep();
+  if(level.drill&&level.drill.rising){ wtick++; if(wtick%(level.drill.riseEvery||22)===0) raiseWater(); }
+  render();
+}
+function startTick(){ if(tickTimer) clearInterval(tickTimer); wtick=0; tickTimer=setInterval(tick,110); }
 function tryPush(x,y,dx){
   if(dx===0) return false;
   var bx=x+dx; if(!inB(bx,y)) return false;
@@ -149,7 +171,8 @@ function deliver(end){
 function updateHearts(){ var h=el("ludus-hearts"); if(h) h.textContent="✦".repeat(Math.max(0,vitae)); }
 
 function levelClear(){ cleared=true; HUD.flash("✦ Kammaren klarad! Porten är öppen — gå till ↑."); }
-function death(){ HUD.flash("Du gick under — kammaren börjar om."); setTimeout(function(){ loadLevel(levelIdx); },800); }
+function death(){ if(dead) return; dead=true; if(tickTimer){ clearInterval(tickTimer); tickTimer=null; }
+  HUD.flash("Du gick under — kammaren börjar om."); setTimeout(function(){ loadLevel(levelIdx); },900); }
 
 /* ---------- rendering ---------- */
 function render(){
@@ -182,10 +205,13 @@ function shapeRune(X,Y){ ctx.save(); ctx.translate(X+TS/2,Y+TS/2); ctx.rotate(Ma
   ctx.strokeStyle="rgba(240,214,138,.5)"; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(X+TS/2,Y+TS/2,TS/2-3,0,7); ctx.stroke(); }
 function drawEnding(X,Y,label){ if(!label) return; var txt=(""+label).replace(/^-/,"");
   var mac=/[āēīōū]/.test(txt); var base=txt.replace(/ā/g,"a").replace(/ē/g,"e").replace(/ī/g,"i").replace(/ō/g,"o").replace(/ū/g,"u");
-  ctx.fillStyle=C.runeInk; ctx.font="bold 20px Georgia"; ctx.textAlign="center"; ctx.textBaseline="middle";
-  ctx.fillText(base,X+TS/2,Y+TS/2+1);
-  if(mac){ var w=ctx.measureText(base).width; ctx.strokeStyle=C.runeInk; ctx.lineWidth=3;
-    ctx.beginPath(); ctx.moveTo(X+TS/2-w/2,Y+TS/2-11); ctx.lineTo(X+TS/2+w/2,Y+TS/2-11); ctx.stroke(); } }
+  var cx=X+TS/2, cy=Y+TS/2+2;
+  ctx.font="bold 25px Georgia"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.lineWidth=4; ctx.strokeStyle="rgba(255,246,214,.92)"; ctx.strokeText(base,cx,cy);  // ljus halo = läsbar
+  ctx.fillStyle="#1a1206"; ctx.fillText(base,cx,cy);
+  if(mac){ var w=ctx.measureText(base).width, by=cy-16;                                  // tydlig makron-stapel
+    ctx.lineWidth=5; ctx.strokeStyle="rgba(255,246,214,.92)"; ctx.beginPath(); ctx.moveTo(cx-w/2,by); ctx.lineTo(cx+w/2,by); ctx.stroke();
+    ctx.lineWidth=3; ctx.strokeStyle="#1a1206"; ctx.beginPath(); ctx.moveTo(cx-w/2,by); ctx.lineTo(cx+w/2,by); ctx.stroke(); } }
 function shapeAltar(X,Y){ ctx.strokeStyle=C.altar; ctx.lineWidth=3; ctx.strokeRect(X+6,Y+6,TS-12,TS-12);
   ctx.fillStyle="rgba(185,137,47,.22)"; ctx.fillRect(X+6,Y+6,TS-12,TS-12);
   ctx.fillStyle=C.altar; ctx.font="bold 22px Georgia"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("◊",X+TS/2,Y+TS/2); }
@@ -205,6 +231,7 @@ function drawLantern(){ var cx=px*TS+TS/2, cy=py*TS+TS/2, r=TS*8;
 
 /* ---------- input ---------- */
 function move(dx,dy){
+  if(dead) return;
   if(dx) facing=dx>0?1:-1;
   var nx=px+dx, ny=py+dy; if(!inB(nx,ny)) return;
   var t=grid[ny][nx];
@@ -215,15 +242,7 @@ function move(dx,dy){
   else if(t==="r"||t==="*"){ if(dy===0) tryPush(nx,ny,dx); }   // knuffa (bara sidled)
   else if(t==="X"){ onExit(); return; }
   else if(t==="~"){ death(); return; }
-  applyGravity();
-  if(level.drill&&level.drill.rising) waterTick();
-  render();
-}
-function waterTick(){ wmoves++; if(wmoves%(level.drill.riseEvery||9)!==0) return;
-  var top=-1; for(var y=0;y<H&&top<0;y++) for(var x=0;x<W;x++){ if(grid[y][x]==="~"){ top=y; break; } }
-  if(top<=1) return; var r=top-1, rose=false;
-  for(var x2=0;x2<W;x2++){ var c=grid[r][x2]; if(c===" "||c==="."){ grid[r][x2]="~"; rose=true; } }  // vattnet äter jord
-  if(rose&&grid[py][px]==="~") death();
+  render();                                           // gravitation/vatten sköts av tick-loopen
 }
 function onExit(){
   if(task!==null && !cleared){ HUD.flash("Porten är låst — bär klart runorna till altaret först."); return; }
