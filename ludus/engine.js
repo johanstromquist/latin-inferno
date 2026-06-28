@@ -122,6 +122,8 @@ var DRILL={
     gen:function(){ return null; } }
 };
 function isImplemented(ty){ return !!DRILL[ty]; }
+function hasQuota(){ return !!(level.drill && isImplemented(level.drill.type)); }   // nivå med uppgiftskvot (annars = nå porten)
+function gateOpen(){ return cleared || !hasQuota(); }   // porten är öppen om klarad — eller om nivån saknar kvot (tutorial)
 function isWordDrill(){ return level.drill && DRILL[level.drill.type] && DRILL[level.drill.type].word; }
 function drillTargets(d){   // vilka tokens kan gen faktiskt be om? (probning)
   var set={}; for(var i=0;i<60;i++){ var t=d.gen(d.pool.slice()); if(t) set[t.goal]=1; } return Object.keys(set);
@@ -374,7 +376,7 @@ function drawTile(x,y,t){
     if(!spr(level.enemySprite||"shade",X,Y)) shapeShade(X,Y);
     ctx.shadowBlur=0; ctx.restore(); }
   else if(t==="i"){ var hz=level.hazardKind||"icicle"; if(!spr(hz,X,Y)){ if(hz==="fang") shapeFang(X,Y); else shapeIcicle(X,Y); } }
-  else if(t==="X"){ if(!spr(cleared?"gate-open":"gate-closed",X,Y)) shapeGate(X,Y,cleared); }
+  else if(t==="X"){ var go=gateOpen(); if(!spr(go?"gate-open":"gate-closed",X,Y)) shapeGate(X,Y,go); }
 }
 function shapeShade(X,Y){ ctx.fillStyle="rgba(60,40,70,.85)"; ctx.beginPath(); ctx.arc(X+TS/2,Y+TS/2,TS/2-4,Math.PI,0); ctx.lineTo(X+TS-5,Y+TS-5); ctx.lineTo(X+5,Y+TS-5); ctx.closePath(); ctx.fill();
   ctx.fillStyle="#d98aa0"; ctx.fillRect(X+TS/2-7,Y+TS/2-2,4,4); ctx.fillRect(X+TS/2+3,Y+TS/2-2,4,4); }
@@ -447,7 +449,8 @@ function move(dx,dy){
   render();                                           // gravitation/vatten sköts av tick-loopen
 }
 function onExit(){
-  if(task!==null && !cleared){ HUD.flash("Porten är låst — bär klart runorna till altaret först."); return; }
+  if(!gateOpen()){ HUD.flash("Porten är låst — bär klart runorna till altaret först."); return; }
+  if(!hasQuota()) saveScore(level.id, levelStart?Date.now()-levelStart:0, moveCount);   // tutorial: klart = nå porten
   if(levelIdx<LUDUS_LEVELS.length-1) loadLevel(levelIdx+1);
   else { HUD.flash("Ad astra — du har nått stjärnorna."); setTimeout(function(){ location.href="../index.html?cutscene=1"; },900); }   // finalen → filmsekvensen
 }
