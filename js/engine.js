@@ -35,23 +35,30 @@ var CUTSCENE=[
     ref:"Dante, Inferno XXXIV, 139 · Vergilius tar farväl" }
 ];
 var csState={timer:null,frameTimer:null};
-function playCutscene(){ var ov=el("cutscene"); if(!ov) return; ov.hidden=false; playScene(0); }
+function playCutscene(){ var ov=el("cutscene"); if(!ov) return; ov.hidden=false;
+  el("cutscene-stage").classList.add("fading"); el("cutscene-cap").classList.add("cap-hidden");   // börja svart → fade in
+  playScene(0); }
 function playScene(i){
   var stage=el("cutscene-stage"), cap=el("cutscene-cap"), img=el("cutscene-frame");
   if(i>=CUTSCENE.length){ endCutscene(); return; }
-  var sc=CUTSCENE[i], f=0;
-  function setFrame(){ stage.style.background=sc.bg; img.src="assets/cutscene/s"+sc.id+"f"+(f+1)+".jpg"; }
-  img.onerror=function(){ img.style.visibility="hidden"; };
-  img.onload=function(){ img.style.visibility="visible"; };
-  stage.classList.remove("fading"); cap.classList.remove("cap-hidden");
+  var sc=CUTSCENE[i], f=0, frame=function(n){ return "assets/cutscene/s"+sc.id+"f"+n+".jpg"; };
   el("cs-la").textContent=sc.la||""; el("cs-sv").textContent=sc.sv||""; el("cs-ref").textContent=sc.ref||"";
-  setFrame();
-  clearInterval(csState.frameTimer); csState.frameTimer=setInterval(function(){ f=(f+1)%sc.frames; setFrame(); }, sc.frameMs);
-  clearTimeout(csState.timer);
-  csState.timer=setTimeout(function(){
-    stage.classList.add("fading"); cap.classList.add("cap-hidden");
-    setTimeout(function(){ clearInterval(csState.frameTimer); playScene(i+1); }, 1000);
-  }, sc.dur);
+  stage.style.background=sc.bg;
+  // ladda inkommande bild MEDAN scenen är svart; fade in FÖRST när den är klar (annars blinkar förra scenen)
+  function begin(){
+    requestAnimationFrame(function(){ stage.classList.remove("fading"); cap.classList.remove("cap-hidden"); });
+    if(i+1<CUTSCENE.length){ var ns=CUTSCENE[i+1]; for(var k=1;k<=ns.frames;k++){ var pi=new Image(); pi.src="assets/cutscene/s"+ns.id+"f"+k+".jpg"; } }   // förladda nästa scen
+    clearInterval(csState.frameTimer);
+    csState.frameTimer=setInterval(function(){ f=(f+1)%sc.frames; img.src=frame(f+1); }, sc.frameMs);
+    clearTimeout(csState.timer);
+    csState.timer=setTimeout(function(){
+      stage.classList.add("fading"); cap.classList.add("cap-hidden");
+      setTimeout(function(){ clearInterval(csState.frameTimer); playScene(i+1); }, 1000);   // fade-out hinner klart
+    }, sc.dur);
+  }
+  img.onload=function(){ img.onload=null; img.onerror=null; img.style.visibility="visible"; begin(); };
+  img.onerror=function(){ img.onload=null; img.onerror=null; img.style.visibility="hidden"; begin(); };   // saknad bild → kör ändå (bg+text)
+  img.src=frame(1);
 }
 function endCutscene(){ clearInterval(csState.frameTimer); clearTimeout(csState.timer);
   var ov=el("cutscene"); if(ov) ov.hidden=true; openCompass(); }
