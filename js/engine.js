@@ -423,4 +423,6 @@ function openCompass(){
 
 /* ---------- init ---------- */
 refreshTitle(); show("screen-title");
+// djuplänk från arkadens final (Saxa Cadentia → Ad Astra) → spela finalfilmen
+try{ if(new URLSearchParams(location.search).get("cutscene")){ setTimeout(playCutscene,350); } }catch(e){}
 })();

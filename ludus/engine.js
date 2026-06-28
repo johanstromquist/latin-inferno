@@ -449,7 +449,7 @@ function move(dx,dy){
 function onExit(){
   if(task!==null && !cleared){ HUD.flash("Porten är låst — bär klart runorna till altaret först."); return; }
   if(levelIdx<LUDUS_LEVELS.length-1) loadLevel(levelIdx+1);
-  else HUD.flash("Ad astra — du har nått stjärnorna.");
+  else { HUD.flash("Ad astra — du har nått stjärnorna."); setTimeout(function(){ location.href="../index.html?cutscene=1"; },900); }   // finalen → filmsekvensen
 }
 
 /* ---------- HUD ---------- */
